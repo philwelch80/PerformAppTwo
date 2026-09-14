@@ -1,5 +1,7 @@
 # Block & Barbell — Coach Plan-Builder Prototype
 
+**Live:** https://performapptwo.netlify.app
+
 A throwaway, coach-side-only prototype to validate the training-plan data model and core
 interactions (Phase → Subphase → Block → Week → Session) before any real visual design or
 backend work happens. Share the link with coaches, watch them click around, then capture what
