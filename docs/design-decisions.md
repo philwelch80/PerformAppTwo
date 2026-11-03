@@ -1,0 +1,85 @@
+# Design Decisions — Coach Plan-Builder (2026-11-03)
+
+Decisions made while mocking up the coach-side prototype. Where this conflicts with the original platform spec or the first coach plan-builder handoff spec (both in the claude.ai "Training Platform" project), **this doc wins**.
+
+Mockups: Claude Design canvas "Coach Plan-Builder — Screen Mockups" (https://claude.ai/artifact/WiXuMtGB5zSoo7aHA5rSD8).
+
+## 1. Naming
+
+- **Exercise group** replaces "session block" (the spec's reusable bundle of exercises). "Block" is already the plan hierarchy level (Phase → Subphase → Block → Week → Session).
+- Third session type is **Routines** (not Mobility / Stretch & Mobility). The repo still says `mobility`.
+- Supersets: exercises alternate one set at a time. Needs an `isSuperset` flag on groups and a visible rotation in the UI.
+
+## 2. Library (replaces the separate "Reusable blocks" screen)
+
+One top-level **Library** with three tabs, mirroring exercise → group → session:
+
+| Tab | Contents | Filters |
+|---|---|---|
+| Exercises | Single exercises | search, body area, equipment, tags, show archived |
+| Exercise groups | Saved bundles of 2+ exercises (may be a superset) | search, "contains exercise", supersets only, tags |
+| Sessions | Whole saved sessions ("Add to week") | search, session type |
+
+- Nav is two items: **Library** and **Plan builder**.
+- Offer "Save as exercise group" only for groups with two or more exercises.
+- Inserting a group into a session **copies** it; editing the copy doesn't change the saved group. (Open: do coaches want linked groups?)
+- Starting weights are included when saving a group by default (checkbox to exclude).
+- Hypothesis to test: do coaches use exercise groups at all? If not, cut the tab.
+
+## 3. Tags
+
+- Tags are chosen by tapping **pills** of existing tags, not by typing free text.
+- "+ New tag" opens a small input; as the coach types, a close existing match is suggested ("Already exists: #upper") before creating a new one.
+- Sidebar filter shows tags sorted by usage with counts; collapses to the top few with "Show all" once there are many.
+- Same tag vocabulary for exercises and exercise groups. Future: rename/merge tags.
+
+## 4. Deleting an exercise
+
+Exercises are referenced by id from groups, sessions and (later) athlete history, so deletion never silently changes them.
+
+- **Unused:** can be deleted permanently (confirmation).
+- **Used:** cannot simply be deleted. Dialog shows usage ("3 exercise groups, 12 sessions") and offers **Archive** (default: hidden from library and picker; existing groups/sessions/history keep working and show the name; restorable via "Show archived") or **Replace with another exercise** (swaps it everywhere, then archives it; for merging duplicates).
+- Never auto-remove an exercise from a group or session.
+- Data model: `Exercise.archived: boolean`; groups and sessions store `exerciseId` references, not copies.
+
+## 5. Plan views
+
+The nested tree stays for structure editing but is no longer the main way to see time. (A tree shows order and containment, not rhythm; the 2010 table grew wider with every week.)
+
+- **Season strip** (top): one bar across the whole plan with phase bands, weekly load bars and week numbers. Stays one screen wide at any plan length. Click to jump.
+- **Block grid** (main): **weeks are rows, days are columns** (Mon–Sun), so longer plans scroll vertically. Rows are grouped under Block headers (with Phase › Subphase context). **Blocks are collapsed by default; the current/first block is open.** Collapsed headers show week range and session count.
+- **Week detail:** single-week table (days across, slots down).
+- Drag a session to any day, slot or week; copy week = duplicate a row; extend = "Add week at end". Outline / Grid toggle switches views.
+- Load bars are placeholder; define the metric first (e.g. total sets, or session RPE × duration).
+- Phase/block header colours must not reuse the session-type colours; use a neutral scale.
+
+## 6. Day slots (AM / PM)
+
+- Each session has a **day** and a **slot**. Default slots: AM / PM; one session per slot cell in the week table.
+- Plan-level setting "Day slots": AM / PM, or Morning / Afternoon / Evening (ordered list, default `["AM","PM"]`). Not in the first build; ship fixed AM / PM.
+- Sessions store the **slot index**, not its name.
+- Open rule: reducing slots is blocked until the removed slot is empty, or the coach chooses where its sessions go.
+
+## 7. Session quick-view panel
+
+Clicking a session in the plan grid opens a **right-hand slide-in panel** (~420 px) instead of navigating away or expanding below the table.
+
+- Read-first: name, type, day + slot (dropdowns), groups and exercises, superset rotation line.
+- Quick edits: sets, reps, starting weight, name, day, slot. Actions: Open full editor, Duplicate, Save as template, Delete.
+- Structural edits (add/reorder exercises or groups, supersets) stay in the full session builder.
+- Body switches by session type. On wide screens the grid narrows to fit; on narrow screens the panel overlays and the selected session scrolls into view; the selected session is outlined.
+
+## 8. Dialogs
+
+Save as exercise group · Insert exercise group (search, pick, position) · Add saved session to a week (week, day, slot picker) · Remove exercise (archive / replace).
+
+## 9. Visual style
+
+Keep the current look (dark header, cool neutrals, teal accent) for now. A warmer take on the old PerformApp palette (amber, blue/green, slab-serif titles) was compared and not chosen. Styling is a later pass.
+
+## 10. Open items
+
+- Rename `mobility` → `routines`; add `slot`, `isSuperset`, `archived` to the data model; migrate existing shared data (see `slice-1-plan.md`).
+- Conditioning body for the quick-view panel.
+- Linked vs copied exercise groups.
+- Load metric for the season strip.
