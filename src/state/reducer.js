@@ -29,7 +29,7 @@ export function reducer(state, action) {
         draft.exercises = action.payload.exercises
         draft.plan = action.payload.plan
         draft.savedSessions = action.payload.savedSessions
-        draft.sessionBlocks = action.payload.sessionBlocks
+        draft.exerciseGroups = action.payload.exerciseGroups
         draft.expanded = expandedFromPlan(action.payload.plan)
         draft.selectedPath = null
         break
@@ -177,7 +177,7 @@ export function reducer(state, action) {
       // strength
       case 'GROUP_ADD': {
         const session = sessionAt(draft, action.path)
-        session.data.groups.push({ id: uid('grp'), label: '', items: [] })
+        session.data.groups.push({ id: uid('grp'), label: '', items: [], isSuperset: false })
         break
       }
       case 'GROUP_RENAME': {
@@ -212,22 +212,29 @@ export function reducer(state, action) {
       case 'GROUP_SAVE_AS_BLOCK': {
         const session = sessionAt(draft, action.path)
         const group = session.data.groups.find((g) => g.id === action.groupId)
-        draft.sessionBlocks.push({
+        draft.exerciseGroups.push({
           id: uid('sb'),
           name: action.name,
           items: JSON.parse(JSON.stringify(group.items)),
+          tags: [],
+          isSuperset: group.items.length >= 2,
         })
         break
       }
       case 'SESSION_BLOCK_INSERT': {
         const session = sessionAt(draft, action.path)
-        const block = draft.sessionBlocks.find((b) => b.id === action.sessionBlockId)
+        const block = draft.exerciseGroups.find((b) => b.id === action.sessionBlockId)
         if (!block) break
-        session.data.groups.push({ id: uid('grp'), label: block.name, items: JSON.parse(JSON.stringify(block.items)) })
+        session.data.groups.push({
+          id: uid('grp'),
+          label: block.name,
+          items: JSON.parse(JSON.stringify(block.items)),
+          isSuperset: block.isSuperset,
+        })
         break
       }
       case 'SESSION_BLOCK_DELETE': {
-        draft.sessionBlocks = draft.sessionBlocks.filter((b) => b.id !== action.id)
+        draft.exerciseGroups = draft.exerciseGroups.filter((b) => b.id !== action.id)
         break
       }
 

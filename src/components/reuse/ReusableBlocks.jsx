@@ -17,13 +17,13 @@ export default function ReusableBlocks() {
         <div className="topbar-note" style={{ marginBottom: 12 }}>
           Saved from a strength group (e.g. a standard warm-up) — one level below a full session, ready to drop into any session.
         </div>
-        {state.sessionBlocks.length === 0 ? (
+        {state.exerciseGroups.length === 0 ? (
           <div className="empty-state">
             None yet. From a strength session, build a group and use &ldquo;Save as session block&rdquo;.
           </div>
         ) : (
           <div className="reuse-grid">
-            {state.sessionBlocks.map((b) => (
+            {state.exerciseGroups.map((b) => (
               <div className="panel reuse-card" key={b.id}>
                 <div className="reuse-card-head">
                   <span className="ex-name">{b.name}</span>

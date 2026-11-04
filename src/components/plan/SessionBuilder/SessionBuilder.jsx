@@ -77,7 +77,7 @@ export default function SessionBuilder({ path, session }) {
 
         {session.type === 'strength' && <StrengthEditor path={path} session={session} />}
         {session.type === 'conditioning' && <ConditioningEditor path={path} session={session} />}
-        {session.type === 'mobility' && <MobilityEditor path={path} session={session} />}
+        {session.type === 'routines' && <MobilityEditor path={path} session={session} />}
       </div>
     </div>
   )

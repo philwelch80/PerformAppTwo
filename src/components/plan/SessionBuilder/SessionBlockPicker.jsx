@@ -5,12 +5,12 @@ export default function SessionBlockPicker({ onSelect, onClose }) {
 
   return (
     <div className="picker-popover">
-      {state.sessionBlocks.length === 0 ? (
+      {state.exerciseGroups.length === 0 ? (
         <div className="empty-state" style={{ padding: 10 }}>
           No saved session blocks yet. Save one from a strength group first.
         </div>
       ) : (
-        state.sessionBlocks.map((b) => (
+        state.exerciseGroups.map((b) => (
           <button
             key={b.id}
             className="picker-item"

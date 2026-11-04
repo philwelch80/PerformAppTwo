@@ -11,20 +11,34 @@ const TABS = [
 ]
 
 export default function App() {
-  const { state, ready, syncError } = useStore()
+  const { state, ready, syncError, tooNew } = useStore()
   const [activeTab, setActiveTab] = useState('library')
   const [resetting, setResetting] = useState(false)
 
   const counts = {
     library: state.exercises.length,
     plan: null,
-    reuse: state.savedSessions.length + state.sessionBlocks.length,
+    reuse: state.savedSessions.length + state.exerciseGroups.length,
   }
 
   if (!ready) {
     return (
       <div className="shell">
         <div className="detail-empty">Loading the shared plan…</div>
+      </div>
+    )
+  }
+
+  if (tooNew) {
+    return (
+      <div className="shell">
+        <div className="empty-state" style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}>
+          Someone saved a newer version of this plan than this tab understands. Reload to pick it up — this
+          tab won&apos;t save over it until you do.
+        </div>
+        <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => window.location.reload()}>
+          Reload
+        </button>
       </div>
     )
   }
