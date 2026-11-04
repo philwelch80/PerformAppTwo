@@ -129,6 +129,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
 }
 
 h1, h2, h3 { font-weight: 600; text-wrap: balance; margin: 0; }
+.lib-subtitle { color: var(--steel); font-size: 13px; margin: 6px 0 0; }
 
 .btn {
   display: inline-flex; align-items: center; gap: 6px;
