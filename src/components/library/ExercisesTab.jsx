@@ -25,27 +25,53 @@ export default function ExercisesTab() {
   const filtered = state.exercises.filter((e) => passesFilter(e, filter))
 
   return (
-    <div>
-      <div className="lib-toolbar">
+    <div className={`library-layout${editingId ? ' has-panel' : ''}`}>
+      <aside className="library-sidebar">
         <input
           type="text"
           placeholder="Search exercises…"
           value={filter.q}
           onChange={(e) => setFilter({ ...filter, q: e.target.value })}
         />
-        <select value={filter.bodyArea} onChange={(e) => setFilter({ ...filter, bodyArea: e.target.value })}>
-          <option value="">All body areas</option>
-          {BODY_AREAS.map((b) => (
-            <option key={b}>{b}</option>
-          ))}
-        </select>
-        <select value={filter.equipment} onChange={(e) => setFilter({ ...filter, equipment: e.target.value })}>
-          <option value="">All equipment</option>
-          {EQUIPMENT.map((eq) => (
-            <option key={eq}>{eq}</option>
-          ))}
-        </select>
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontWeight: 400, color: 'var(--ink)', margin: 0 }}>
+
+        <div className="sidebar-group">
+          <div className="subtle-label">Body area</div>
+          <div className="sidebar-check-list">
+            {BODY_AREAS.map((b) => (
+              <label key={b}>
+                <input
+                  type="checkbox"
+                  checked={filter.bodyArea === b}
+                  onChange={() => setFilter({ ...filter, bodyArea: filter.bodyArea === b ? '' : b })}
+                />
+                {b}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="sidebar-group">
+          <div className="subtle-label">Equipment</div>
+          <div className="sidebar-check-list">
+            {EQUIPMENT.map((eq) => (
+              <label key={eq}>
+                <input
+                  type="checkbox"
+                  checked={filter.equipment === eq}
+                  onChange={() => setFilter({ ...filter, equipment: filter.equipment === eq ? '' : eq })}
+                />
+                {eq}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="sidebar-group">
+          <div className="subtle-label">Tags</div>
+          <TagFilterPills counts={counts} active={filter.tag} onSelect={(tag) => setFilter({ ...filter, tag: tag || '' })} />
+        </div>
+
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 400, color: 'var(--ink)' }}>
           <input
             type="checkbox"
             style={{ width: 'auto' }}
@@ -54,63 +80,65 @@ export default function ExercisesTab() {
           />
           Show archived
         </label>
-        <span style={{ flex: 1 }} />
-        <button className="btn btn-primary" onClick={() => setEditingId('new')}>
-          + New exercise
-        </button>
-      </div>
+      </aside>
 
-      <TagFilterPills counts={counts} active={filter.tag} onSelect={(tag) => setFilter({ ...filter, tag: tag || '' })} />
+      <div className="library-main">
+        <div className="lib-toolbar" style={{ justifyContent: 'flex-end' }}>
+          <button className="btn btn-primary" onClick={() => setEditingId('new')}>
+            + New exercise
+          </button>
+        </div>
 
-      {filtered.length === 0 ? (
-        <div className="empty-state" style={{ marginTop: 14 }}>No exercises match those filters.</div>
-      ) : (
-        <div className="lib-grid" style={{ marginTop: 14 }}>
-          {filtered.map((e) => (
-            <div className="panel ex-card" key={e.id}>
-              <div className="ex-card-top">
-                <span className="ex-name">{e.name}</span>
-                <div className="ex-card-actions">
-                  {e.archived && <span className="chip chip-archived">Archived</span>}
-                  {e.archived && (
-                    <button
-                      className="btn btn-ghost btn-sm"
-                      onClick={() => {
-                        dispatch({ type: 'EXERCISE_RESTORE', id: e.id })
-                        toast('Exercise restored')
-                      }}
-                    >
-                      Restore
+        {filtered.length === 0 ? (
+          <div className="empty-state">No exercises match those filters.</div>
+        ) : (
+          <div className="lib-grid">
+            {filtered.map((e) => (
+              <div className="panel ex-card" key={e.id}>
+                <div className="ex-card-top">
+                  <span className="ex-name">{e.name}</span>
+                  <div className="ex-card-actions">
+                    {e.archived && <span className="chip chip-archived">Archived</span>}
+                    {e.archived && (
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => {
+                          dispatch({ type: 'EXERCISE_RESTORE', id: e.id })
+                          toast('Exercise restored')
+                        }}
+                      >
+                        Restore
+                      </button>
+                    )}
+                    <button className="btn btn-ghost btn-sm" onClick={() => setEditingId(e.id)}>
+                      Edit
                     </button>
-                  )}
-                  <button className="btn btn-ghost btn-sm" onClick={() => setEditingId(e.id)}>
-                    Edit
-                  </button>
+                  </div>
                 </div>
-              </div>
-              <div className="ex-meta">
-                <span className="chip">{e.movementPattern}</span>
-                {e.bodyAreas.map((b) => (
-                  <span className="chip" key={b}>
-                    {b}
-                  </span>
-                ))}
-                <span className="chip">{e.equipment}</span>
-              </div>
-              {e.tags.length > 0 && (
                 <div className="ex-meta">
-                  {e.tags.map((t) => (
-                    <span className="chip chip-tag" key={t}>
-                      #{t}
+                  <span className="chip">{e.movementPattern}</span>
+                  {e.bodyAreas.map((b) => (
+                    <span className="chip" key={b}>
+                      {b}
                     </span>
                   ))}
+                  <span className="chip">{e.equipment}</span>
                 </div>
-              )}
-              {e.description && <div className="ex-desc">{e.description}</div>}
-            </div>
-          ))}
-        </div>
-      )}
+                {e.tags.length > 0 && (
+                  <div className="ex-meta">
+                    {e.tags.map((t) => (
+                      <span className="chip chip-tag" key={t}>
+                        #{t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {e.description && <div className="ex-desc">{e.description}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {editingId && <ExerciseModal editingId={editingId} onClose={() => setEditingId(null)} />}
     </div>

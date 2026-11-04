@@ -188,6 +188,18 @@ label { display: block; font-size: 12px; font-weight: 500; color: var(--ink-soft
 .panel-pad { padding: 16px; }
 
 /* ---------- library ---------- */
+.library-layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 20px; align-items: start; }
+.library-layout.has-panel { grid-template-columns: 210px minmax(0, 1fr) 340px; }
+@media (max-width: 900px) {
+  .library-layout, .library-layout.has-panel { grid-template-columns: 1fr; }
+}
+.library-sidebar { display: flex; flex-direction: column; gap: 18px; }
+.sidebar-group { display: flex; flex-direction: column; gap: 6px; }
+.sidebar-check-list { display: flex; flex-direction: column; gap: 4px; }
+.sidebar-check-list label { display: flex; align-items: center; gap: 6px; font-weight: 400; color: var(--ink); margin: 0; }
+.sidebar-check-list input[type=checkbox] { width: auto; }
+.edit-panel { padding: 16px; position: sticky; top: 20px; }
+
 .lib-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
 .lib-toolbar input[type=text] { max-width: 220px; }
 .lib-toolbar select { max-width: 170px; }

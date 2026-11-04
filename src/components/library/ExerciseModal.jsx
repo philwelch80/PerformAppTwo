@@ -75,8 +75,8 @@ export default function ExerciseModal({ editingId, onClose }) {
   }
 
   return (
-    <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal">
+    <>
+      <div className="panel panel-pad edit-panel">
         <div className="modal-head">
           <h3>{isNew ? 'New exercise' : 'Edit exercise'}</h3>
           <button className="btn btn-ghost" onClick={onClose} aria-label="Close">
@@ -162,6 +162,6 @@ export default function ExerciseModal({ editingId, onClose }) {
           onCancel={() => setShowUsageDialog(false)}
         />
       )}
-    </div>
+    </>
   )
 }
