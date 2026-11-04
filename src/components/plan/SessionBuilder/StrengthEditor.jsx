@@ -4,8 +4,8 @@ import { useToast } from '../../../state/ToastContext.jsx'
 import ExercisePicker from './ExercisePicker.jsx'
 import SessionBlockPicker from './SessionBlockPicker.jsx'
 
-function exerciseName(exercises, id) {
-  return exercises.find((e) => e.id === id)?.name || '(deleted exercise)'
+function findExercise(exercises, id) {
+  return exercises.find((e) => e.id === id) || null
 }
 
 export default function StrengthEditor({ path, session }) {
@@ -54,9 +54,18 @@ export default function StrengthEditor({ path, session }) {
                 <span>Starting wt.</span>
                 <span></span>
               </div>
-              {group.items.map((item, index) => (
+              {group.items.map((item, index) => {
+                const ex = findExercise(state.exercises, item.exerciseId)
+                return (
                 <div className="ex-row" key={index}>
-                  <span className="ex-row-name">{exerciseName(state.exercises, item.exerciseId)}</span>
+                  <span className="ex-row-name">
+                    {ex ? ex.name : '(deleted exercise)'}
+                    {ex?.archived && (
+                      <span className="chip chip-archived" style={{ marginLeft: 6 }}>
+                        archived
+                      </span>
+                    )}
+                  </span>
                   <input
                     type="number"
                     min="0"
@@ -82,7 +91,8 @@ export default function StrengthEditor({ path, session }) {
                     ×
                   </button>
                 </div>
-              ))}
+                )
+              })}
             </>
           )}
 

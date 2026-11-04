@@ -1,13 +1,11 @@
 import { useState } from 'react'
 import { useStore, resetSharedData } from './state/StoreContext.jsx'
-import ExerciseLibrary from './components/library/ExerciseLibrary.jsx'
+import Library from './components/library/Library.jsx'
 import PlanBuilder from './components/plan/PlanBuilder.jsx'
-import ReusableBlocks from './components/reuse/ReusableBlocks.jsx'
 
 const TABS = [
-  { id: 'library', label: 'Exercise Library' },
-  { id: 'plan', label: 'Training Plan' },
-  { id: 'reuse', label: 'Reusable Blocks' },
+  { id: 'library', label: 'Library' },
+  { id: 'plan', label: 'Plan builder' },
 ]
 
 export default function App() {
@@ -16,9 +14,8 @@ export default function App() {
   const [resetting, setResetting] = useState(false)
 
   const counts = {
-    library: state.exercises.length,
+    library: state.exercises.filter((e) => !e.archived).length,
     plan: null,
-    reuse: state.savedSessions.length + state.exerciseGroups.length,
   }
 
   if (!ready) {
@@ -91,9 +88,8 @@ export default function App() {
         ))}
       </div>
 
-      {activeTab === 'library' && <ExerciseLibrary />}
+      {activeTab === 'library' && <Library />}
       {activeTab === 'plan' && <PlanBuilder />}
-      {activeTab === 'reuse' && <ReusableBlocks />}
 
       <div className="foot-note">
         Coach-side prototype only — no athlete views, no accounts. Anyone with this link sees and can

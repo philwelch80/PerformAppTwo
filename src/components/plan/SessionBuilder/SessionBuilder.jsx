@@ -11,7 +11,7 @@ function hasContent(session) {
   return session.data.items.length > 0
 }
 
-export default function SessionBuilder({ path, session }) {
+export default function SessionBuilder({ path, session, onDelete, hideSaveAsTemplate }) {
   const { dispatch } = useStore()
   const toast = useToast()
 
@@ -44,13 +44,18 @@ export default function SessionBuilder({ path, session }) {
           />
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-sm" onClick={saveAsTemplate}>
-            Save as session template
-          </button>
+          {!hideSaveAsTemplate && (
+            <button className="btn btn-sm" onClick={saveAsTemplate}>
+              Save as session template
+            </button>
+          )}
           <button
             className="btn btn-danger-text btn-sm"
             onClick={() => {
-              if (window.confirm('Delete this session?')) {
+              if (!window.confirm('Delete this session?')) return
+              if (onDelete) {
+                onDelete()
+              } else {
                 dispatch({
                   type: 'NODE_DELETE',
                   kind: 'session',

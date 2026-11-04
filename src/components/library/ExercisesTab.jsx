@@ -2,9 +2,12 @@ import { useMemo, useState } from 'react'
 import { useStore } from '../../state/StoreContext.jsx'
 import { useToast } from '../../state/ToastContext.jsx'
 import { BODY_AREAS, EQUIPMENT } from '../../lib/taxonomy'
+import { tagCounts } from '../../lib/exercises'
+import TagFilterPills from './TagFilterPills.jsx'
 import ExerciseModal from './ExerciseModal.jsx'
 
 function passesFilter(exercise, filter) {
+  if (!filter.showArchived && exercise.archived) return false
   if (filter.q && !exercise.name.toLowerCase().includes(filter.q.toLowerCase())) return false
   if (filter.bodyArea && !exercise.bodyAreas.includes(filter.bodyArea)) return false
   if (filter.equipment && exercise.equipment !== filter.equipment) return false
@@ -12,18 +15,13 @@ function passesFilter(exercise, filter) {
   return true
 }
 
-export default function ExerciseLibrary() {
+export default function ExercisesTab() {
   const { state, dispatch } = useStore()
   const toast = useToast()
-  const [filter, setFilter] = useState({ q: '', bodyArea: '', equipment: '', tag: '' })
+  const [filter, setFilter] = useState({ q: '', bodyArea: '', equipment: '', tag: '', showArchived: false })
   const [editingId, setEditingId] = useState(null) // 'new' | exercise id | null
 
-  const allTags = useMemo(() => {
-    const set = new Set()
-    state.exercises.forEach((e) => e.tags.forEach((t) => set.add(t)))
-    return [...set].sort()
-  }, [state.exercises])
-
+  const counts = useMemo(() => tagCounts(state.exercises), [state.exercises])
   const filtered = state.exercises.filter((e) => passesFilter(e, filter))
 
   return (
@@ -47,40 +45,46 @@ export default function ExerciseLibrary() {
             <option key={eq}>{eq}</option>
           ))}
         </select>
-        {allTags.length > 0 && (
-          <select value={filter.tag} onChange={(e) => setFilter({ ...filter, tag: e.target.value })}>
-            <option value="">All tags</option>
-            {allTags.map((t) => (
-              <option key={t}>{t}</option>
-            ))}
-          </select>
-        )}
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontWeight: 400, color: 'var(--ink)', margin: 0 }}>
+          <input
+            type="checkbox"
+            style={{ width: 'auto' }}
+            checked={filter.showArchived}
+            onChange={(e) => setFilter({ ...filter, showArchived: e.target.checked })}
+          />
+          Show archived
+        </label>
         <span style={{ flex: 1 }} />
         <button className="btn btn-primary" onClick={() => setEditingId('new')}>
           + New exercise
         </button>
       </div>
 
+      <TagFilterPills counts={counts} active={filter.tag} onSelect={(tag) => setFilter({ ...filter, tag: tag || '' })} />
+
       {filtered.length === 0 ? (
-        <div className="empty-state">No exercises match those filters.</div>
+        <div className="empty-state" style={{ marginTop: 14 }}>No exercises match those filters.</div>
       ) : (
-        <div className="lib-grid">
+        <div className="lib-grid" style={{ marginTop: 14 }}>
           {filtered.map((e) => (
             <div className="panel ex-card" key={e.id}>
               <div className="ex-card-top">
                 <span className="ex-name">{e.name}</span>
                 <div className="ex-card-actions">
+                  {e.archived && <span className="chip chip-archived">Archived</span>}
+                  {e.archived && (
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => {
+                        dispatch({ type: 'EXERCISE_RESTORE', id: e.id })
+                        toast('Exercise restored')
+                      }}
+                    >
+                      Restore
+                    </button>
+                  )}
                   <button className="btn btn-ghost btn-sm" onClick={() => setEditingId(e.id)}>
                     Edit
-                  </button>
-                  <button
-                    className="btn btn-ghost btn-sm btn-danger-text"
-                    onClick={() => {
-                      dispatch({ type: 'EXERCISE_DELETE', id: e.id })
-                      toast('Exercise removed')
-                    }}
-                  >
-                    ×
                   </button>
                 </div>
               </div>
