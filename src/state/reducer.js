@@ -2,6 +2,7 @@ import { produce } from 'immer'
 import { uid } from '../lib/id'
 import { emptySessionData } from '../lib/taxonomy'
 import { expandedFromPlan } from '../lib/seed'
+import { isExerciseInUse } from '../lib/exercises'
 import {
   getPhase,
   getSub,
@@ -46,7 +47,18 @@ export function reducer(state, action) {
         break
       }
       case 'EXERCISE_DELETE': {
+        if (isExerciseInUse(draft, action.id)) break
         draft.exercises = draft.exercises.filter((e) => e.id !== action.id)
+        break
+      }
+      case 'EXERCISE_ARCHIVE': {
+        const ex = draft.exercises.find((e) => e.id === action.id)
+        if (ex) ex.archived = true
+        break
+      }
+      case 'EXERCISE_RESTORE': {
+        const ex = draft.exercises.find((e) => e.id === action.id)
+        if (ex) ex.archived = false
         break
       }
 
@@ -209,32 +221,33 @@ export function reducer(state, action) {
         group.items.splice(action.itemIndex, 1)
         break
       }
-      case 'GROUP_SAVE_AS_BLOCK': {
+      case 'GROUP_SAVE_AS_GROUP': {
         const session = sessionAt(draft, action.path)
         const group = session.data.groups.find((g) => g.id === action.groupId)
+        if (!group || group.items.length < 2) break
         draft.exerciseGroups.push({
-          id: uid('sb'),
+          id: uid('xg'),
           name: action.name,
           items: JSON.parse(JSON.stringify(group.items)),
           tags: [],
-          isSuperset: group.items.length >= 2,
+          isSuperset: true,
         })
         break
       }
-      case 'SESSION_BLOCK_INSERT': {
+      case 'EXERCISE_GROUP_INSERT': {
         const session = sessionAt(draft, action.path)
-        const block = draft.exerciseGroups.find((b) => b.id === action.sessionBlockId)
-        if (!block) break
+        const exerciseGroup = draft.exerciseGroups.find((g) => g.id === action.exerciseGroupId)
+        if (!exerciseGroup) break
         session.data.groups.push({
           id: uid('grp'),
-          label: block.name,
-          items: JSON.parse(JSON.stringify(block.items)),
-          isSuperset: block.isSuperset,
+          label: exerciseGroup.name,
+          items: JSON.parse(JSON.stringify(exerciseGroup.items)),
+          isSuperset: exerciseGroup.isSuperset,
         })
         break
       }
-      case 'SESSION_BLOCK_DELETE': {
-        draft.exerciseGroups = draft.exerciseGroups.filter((b) => b.id !== action.id)
+      case 'EXERCISE_GROUP_DELETE': {
+        draft.exerciseGroups = draft.exerciseGroups.filter((g) => g.id !== action.id)
         break
       }
 
@@ -245,23 +258,23 @@ export function reducer(state, action) {
         break
       }
 
-      // mobility
-      case 'MOBILITY_ITEM_ADD': {
+      // routines
+      case 'ROUTINE_ITEM_ADD': {
         const session = sessionAt(draft, action.path)
         session.data.items.push({ label: '', note: '' })
         break
       }
-      case 'MOBILITY_ITEM_UPDATE': {
+      case 'ROUTINE_ITEM_UPDATE': {
         const session = sessionAt(draft, action.path)
         session.data.items[action.index][action.field] = action.value
         break
       }
-      case 'MOBILITY_ITEM_DELETE': {
+      case 'ROUTINE_ITEM_DELETE': {
         const session = sessionAt(draft, action.path)
         session.data.items.splice(action.index, 1)
         break
       }
-      case 'MOBILITY_ITEMS_REORDER': {
+      case 'ROUTINE_ITEMS_REORDER': {
         const session = sessionAt(draft, action.path)
         const [moved] = session.data.items.splice(action.fromIndex, 1)
         session.data.items.splice(action.toIndex, 0, moved)

@@ -76,6 +76,16 @@ export function cloneWeekWithFreshIds(week) {
   return copy
 }
 
+export function allSessions(plan) {
+  const sessions = []
+  plan.phases.forEach((phase) =>
+    phase.subphases.forEach((sub) =>
+      sub.blocks.forEach((block) => block.weeks.forEach((week) => sessions.push(...week.sessions))),
+    ),
+  )
+  return sessions
+}
+
 export function moveWithinArray(array, fromId, toId) {
   const fromIdx = array.findIndex((x) => x.id === fromId)
   const toIdx = array.findIndex((x) => x.id === toId)

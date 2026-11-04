@@ -30,7 +30,7 @@ export default function ReusableBlocks() {
                   <button
                     className="btn btn-ghost btn-sm btn-danger-text"
                     onClick={() => {
-                      dispatch({ type: 'SESSION_BLOCK_DELETE', id: b.id })
+                      dispatch({ type: 'EXERCISE_GROUP_DELETE', id: b.id })
                       toast('Session block removed')
                     }}
                   >
