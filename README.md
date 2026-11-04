@@ -51,7 +51,7 @@ project for the values, or create your own project and apply the schema below.
 
 ## Shared backend (Supabase)
 
-All shared data (exercises, the plan, saved session templates, session blocks) lives in one row
+All shared data (exercises, the plan, saved session templates, exercise groups) lives in one row
 of a single table:
 
 ```sql
