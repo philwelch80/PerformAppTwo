@@ -30,16 +30,25 @@ export function isExerciseInUse(state, exerciseId) {
   return exerciseUsage(state, exerciseId).total > 0
 }
 
-// Tags sorted by how many exercises use them (most-used first), for the
-// filter sidebar's pills-with-counts.
-export function tagCounts(exercises) {
+// Tags sorted by how many items (exercises, or exercise groups) use them
+// (most-used first), for a tab's filter pills-with-counts.
+export function tagCounts(items) {
   const counts = new Map()
-  exercises.forEach((exercise) => {
-    exercise.tags.forEach((tag) => counts.set(tag, (counts.get(tag) || 0) + 1))
+  items.forEach((item) => {
+    item.tags.forEach((tag) => counts.set(tag, (counts.get(tag) || 0) + 1))
   })
   return [...counts.entries()]
     .map(([tag, count]) => ({ tag, count }))
     .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag))
+}
+
+// Exercises and exercise groups share one tag vocabulary, so the "+ New
+// tag" pill in either edit form offers every tag used anywhere.
+export function allTagNames(state) {
+  const set = new Set()
+  state.exercises.forEach((e) => e.tags.forEach((t) => set.add(t)))
+  state.exerciseGroups.forEach((g) => g.tags.forEach((t) => set.add(t)))
+  return [...set].sort((a, b) => a.localeCompare(b))
 }
 
 // For the "+ New tag" input's "Already exists: #upper" suggestion —
@@ -50,4 +59,15 @@ export function findCloseTag(existingTags, input) {
   const prefixMatch = existingTags.find((tag) => tag.toLowerCase().startsWith(needle))
   if (prefixMatch) return prefixMatch
   return existingTags.find((tag) => tag.toLowerCase().includes(needle)) || null
+}
+
+// Best-effort "used in N sessions" for an exercise group's card: inserting a
+// group into a session COPIES its items (see design-decisions.md "Linked vs
+// copied exercise groups" open item), so there's no stored back-reference —
+// this matches plan sessions whose group label equals the saved group's
+// name, which only catches unedited, unrenamed copies.
+export function exerciseGroupUsageCount(state, exerciseGroup) {
+  return allSessions(state.plan).filter(
+    (session) => session.type === 'strength' && session.data.groups.some((g) => g.label === exerciseGroup.name),
+  ).length
 }

@@ -15,7 +15,10 @@ import {
   moveWithinArray,
 } from '../lib/planTree'
 
+// A path either locates a session in the plan tree, or (for editing a saved
+// session template from the Library) names a savedSessions entry directly.
 function sessionAt(draft, path) {
+  if (path.savedSessionId) return draft.savedSessions.find((s) => s.id === path.savedSessionId)
   return locatePath(draft.plan, path).session
 }
 
@@ -248,6 +251,32 @@ export function reducer(state, action) {
       }
       case 'EXERCISE_GROUP_DELETE': {
         draft.exerciseGroups = draft.exerciseGroups.filter((g) => g.id !== action.id)
+        break
+      }
+      case 'EXERCISE_GROUP_UPDATE': {
+        const group = draft.exerciseGroups.find((g) => g.id === action.id)
+        if (group) Object.assign(group, action.payload)
+        break
+      }
+      case 'EXERCISE_GROUP_DUPLICATE': {
+        const group = draft.exerciseGroups.find((g) => g.id === action.id)
+        if (!group) break
+        draft.exerciseGroups.push({ ...JSON.parse(JSON.stringify(group)), id: uid('xg'), name: `${group.name} copy` })
+        break
+      }
+      case 'EXERCISE_GROUP_ITEM_ADD': {
+        const group = draft.exerciseGroups.find((g) => g.id === action.id)
+        group.items.push({ exerciseId: action.exerciseId, sets: 3, reps: 10, startingWeight: '' })
+        break
+      }
+      case 'EXERCISE_GROUP_ITEM_UPDATE': {
+        const group = draft.exerciseGroups.find((g) => g.id === action.id)
+        group.items[action.itemIndex][action.field] = action.value
+        break
+      }
+      case 'EXERCISE_GROUP_ITEM_DELETE': {
+        const group = draft.exerciseGroups.find((g) => g.id === action.id)
+        group.items.splice(action.itemIndex, 1)
         break
       }
 

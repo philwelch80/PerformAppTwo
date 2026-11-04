@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { exerciseUsage, isExerciseInUse, tagCounts, findCloseTag } from './exercises'
+import { exerciseUsage, isExerciseInUse, tagCounts, allTagNames, findCloseTag, exerciseGroupUsageCount } from './exercises'
 import { migrate } from './migrate'
 import { freshState } from './seed'
 
@@ -102,5 +102,26 @@ describe('findCloseTag', () => {
   it('returns null when nothing matches or input is blank', () => {
     expect(findCloseTag(tags, 'xyz')).toBeNull()
     expect(findCloseTag(tags, '  ')).toBeNull()
+  })
+})
+
+describe('allTagNames', () => {
+  it('unions exercise tags and exercise group tags, deduped and sorted', () => {
+    const state = { exercises: [{ tags: ['b-tag'] }, { tags: ['staple'] }], exerciseGroups: [{ tags: ['a-tag', 'b-tag'] }] }
+    expect(allTagNames(state)).toEqual(['a-tag', 'b-tag', 'staple'])
+  })
+})
+
+describe('exerciseGroupUsageCount', () => {
+  it('counts plan sessions with a strength group whose label matches the saved group name', () => {
+    const state = migrate(freshState())
+    const group = { id: 'xg-1', name: 'Group A', items: [], tags: [], isSuperset: true } // matches seeded "Group A" label used in both "Lower A" and "Upper A"
+    expect(exerciseGroupUsageCount(state, group)).toBe(2)
+  })
+
+  it('is zero when no session group shares the name', () => {
+    const state = migrate(freshState())
+    const group = { id: 'xg-1', name: 'Totally Unused Name', items: [], tags: [], isSuperset: true }
+    expect(exerciseGroupUsageCount(state, group)).toBe(0)
   })
 })

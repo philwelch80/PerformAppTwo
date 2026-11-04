@@ -76,6 +76,25 @@ export function cloneWeekWithFreshIds(week) {
   return copy
 }
 
+// Flattened weeks with their full path and a breadcrumb label, for a
+// single-select "which week" picker (e.g. the Library's "Add to week").
+export function allWeeksWithPath(plan) {
+  const rows = []
+  plan.phases.forEach((phase) =>
+    phase.subphases.forEach((sub) =>
+      sub.blocks.forEach((block) =>
+        block.weeks.forEach((week) => {
+          rows.push({
+            path: { phaseId: phase.id, subId: sub.id, blockId: block.id, weekId: week.id },
+            label: `${phase.name} › ${sub.name} › ${block.name} › ${week.name}`,
+          })
+        }),
+      ),
+    ),
+  )
+  return rows
+}
+
 export function allSessions(plan) {
   const sessions = []
   plan.phases.forEach((phase) =>

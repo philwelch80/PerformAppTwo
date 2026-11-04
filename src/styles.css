@@ -14,8 +14,8 @@
   --accent-ink: #6B3B10;
   --conditioning: #2C6F8E;
   --conditioning-soft: #DCEBF1;
-  --mobility: #4F7F56;
-  --mobility-soft: #DFEBE0;
+  --routines: #4F7F56;
+  --routines-soft: #DFEBE0;
   --danger: #A23B32;
   --focus-ring: #2C6F8E;
   --radius-s: 4px;
@@ -37,8 +37,8 @@
     --accent-ink: #F2C99B;
     --conditioning: #6FB2D4;
     --conditioning-soft: #1C333E;
-    --mobility: #8DC195;
-    --mobility-soft: #223A26;
+    --routines: #8DC195;
+    --routines-soft: #223A26;
     --danger: #E08277;
     --focus-ring: #6FB2D4;
   }
@@ -58,8 +58,8 @@
   --accent-ink: #F2C99B;
   --conditioning: #6FB2D4;
   --conditioning-soft: #1C333E;
-  --mobility: #8DC195;
-  --mobility-soft: #223A26;
+  --routines: #8DC195;
+  --routines-soft: #223A26;
   --danger: #E08277;
   --focus-ring: #6FB2D4;
 }
@@ -154,11 +154,20 @@ label { display: block; font-size: 12px; font-weight: 500; color: var(--ink-soft
 .chip-removable { cursor: default; }
 .chip-removable button { background: none; border: none; cursor: pointer; color: inherit; padding: 0; font-size: 13px; line-height: 1; opacity: 0.6; }
 .chip-removable button:hover { opacity: 1; }
+.chip-btn { cursor: pointer; }
+.chip-btn:hover { border-color: var(--line-strong); }
+.chip-btn.selected { background: var(--accent-soft); color: var(--accent-ink); }
+.chip-count { opacity: 0.7; margin-left: 1px; }
+.chip-archived { background: transparent; border: 1px dashed var(--danger); color: var(--danger); }
+.chip-new-tag-input { display: inline-flex; align-items: center; gap: 4px; }
+.chip-new-tag-input input { width: 140px; padding: 3px 7px; font-size: 12px; }
+.tag-hint { font-size: 11.5px; color: var(--steel); margin-left: 4px; }
+.superset-badge { background: var(--surface-sunken); color: var(--ink-soft); }
 
 .type-badge { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 7px; border-radius: var(--radius-s); }
 .type-strength { background: var(--accent-soft); color: var(--accent-ink); }
 .type-conditioning { background: var(--conditioning-soft); color: var(--conditioning); }
-.type-mobility { background: var(--mobility-soft); color: var(--mobility); }
+.type-routines { background: var(--routines-soft); color: var(--routines); }
 
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-m); }
 .panel-pad { padding: 16px; }
@@ -212,7 +221,7 @@ label { display: block; font-size: 12px; font-weight: 500; color: var(--ink-soft
 .session-type-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
 .dot-strength { background: var(--accent); }
 .dot-conditioning { background: var(--conditioning); }
-.dot-mobility { background: var(--mobility); }
+.dot-routines { background: var(--routines); }
 
 /* ---------- detail panel ---------- */
 .detail-panel { min-height: 320px; }

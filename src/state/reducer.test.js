@@ -125,3 +125,56 @@ describe('ROUTINE_ITEM_* actions', () => {
     expect(sessionByName(deleted, 'Mobility Flow').data.items.length).toBe(countBefore)
   })
 })
+
+describe('EXERCISE_GROUP_UPDATE / DUPLICATE / ITEM_*', () => {
+  it('updates name, tags and isSuperset on a saved exercise group', () => {
+    const state = initialState()
+    const group = state.exerciseGroups[0]
+    const next = reducer(state, { type: 'EXERCISE_GROUP_UPDATE', id: group.id, payload: { name: 'Renamed', tags: ['upper'], isSuperset: false } })
+    const updated = next.exerciseGroups.find((g) => g.id === group.id)
+    expect(updated.name).toBe('Renamed')
+    expect(updated.tags).toEqual(['upper'])
+    expect(updated.isSuperset).toBe(false)
+  })
+
+  it('duplicates a group with a fresh id and a "copy" suffix', () => {
+    const state = initialState()
+    const group = state.exerciseGroups[0]
+    const next = reducer(state, { type: 'EXERCISE_GROUP_DUPLICATE', id: group.id })
+    expect(next.exerciseGroups.length).toBe(state.exerciseGroups.length + 1)
+    const copy = next.exerciseGroups.find((g) => g.name === `${group.name} copy`)
+    expect(copy).toBeDefined()
+    expect(copy.id).not.toBe(group.id)
+  })
+
+  it('adds, updates and deletes items on a saved exercise group', () => {
+    const state = initialState()
+    const group = state.exerciseGroups[0]
+    const exerciseId = state.exercises[0].id
+
+    const added = reducer(state, { type: 'EXERCISE_GROUP_ITEM_ADD', id: group.id, exerciseId })
+    const afterAdd = added.exerciseGroups.find((g) => g.id === group.id)
+    expect(afterAdd.items.length).toBe(group.items.length + 1)
+
+    const updated = reducer(added, { type: 'EXERCISE_GROUP_ITEM_UPDATE', id: group.id, itemIndex: 0, field: 'sets', value: 7 })
+    expect(updated.exerciseGroups.find((g) => g.id === group.id).items[0].sets).toBe(7)
+
+    const deleted = reducer(updated, { type: 'EXERCISE_GROUP_ITEM_DELETE', id: group.id, itemIndex: 0 })
+    expect(deleted.exerciseGroups.find((g) => g.id === group.id).items.length).toBe(afterAdd.items.length - 1)
+  })
+})
+
+describe('editing a saved session template directly (path.savedSessionId)', () => {
+  it('renames and edits a saved session template in place, without touching the plan', () => {
+    const state = initialState()
+    const saved = { id: 'tpl-1', name: 'Saved Lower', type: 'strength', data: { groups: [{ id: 'grp-1', label: '', items: [], isSuperset: false }] } }
+    const withSaved = { ...state, savedSessions: [...state.savedSessions, saved] }
+    const path = { savedSessionId: 'tpl-1' }
+
+    const renamed = reducer(withSaved, { type: 'SESSION_RENAME', path, name: 'Renamed Template' })
+    expect(renamed.savedSessions.find((s) => s.id === 'tpl-1').name).toBe('Renamed Template')
+
+    const grouped = reducer(renamed, { type: 'GROUP_ADD', path })
+    expect(grouped.savedSessions.find((s) => s.id === 'tpl-1').data.groups.length).toBe(2)
+  })
+})
