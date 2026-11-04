@@ -107,6 +107,10 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
   font-size: 12px; color: #AEB6C2; border: 1px solid #3B424C; border-radius: 999px;
   padding: 4px 10px; white-space: nowrap;
 }
+@media (max-width: 560px) {
+  .app-header-inner { flex-wrap: wrap; row-gap: 8px; }
+  .app-header-nav { flex-basis: 100%; order: 3; }
+}
 
 .app-subbar {
   display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
