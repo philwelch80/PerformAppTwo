@@ -3,7 +3,7 @@ import { reducer } from './reducer'
 import { freshState } from '../lib/seed'
 import { supabase } from '../lib/supabaseClient'
 
-const ROW_ID = 'singleton'
+const ROW_ID = import.meta.env.VITE_STATE_ROW_ID || 'singleton'
 const SAVE_DEBOUNCE_MS = 600
 const POLL_INTERVAL_MS = 8000
 
