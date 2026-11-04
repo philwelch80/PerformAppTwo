@@ -8,24 +8,36 @@ import AddToWeekDialog from './AddToWeekDialog.jsx'
 export default function SessionsTab() {
   const { state, dispatch } = useStore()
   const toast = useToast()
+  const [q, setQ] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [editingId, setEditingId] = useState(null)
   const [addingToWeekId, setAddingToWeekId] = useState(null)
 
-  const filtered = state.savedSessions.filter((s) => !typeFilter || s.type === typeFilter)
+  const filtered = state.savedSessions.filter(
+    (s) => (!typeFilter || s.type === typeFilter) && (!q || s.name.toLowerCase().includes(q.toLowerCase())),
+  )
   const addingToWeekSession = state.savedSessions.find((s) => s.id === addingToWeekId)
 
   return (
     <div>
-      <div className="lib-toolbar">
-        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-          <option value="">All session types</option>
+      <div className="lib-toolbar" style={{ justifyContent: 'space-between' }}>
+        <input type="text" placeholder="Search sessions…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <div className="seg-control">
+          <button type="button" className="seg-btn" aria-pressed={typeFilter === ''} onClick={() => setTypeFilter('')}>
+            All
+          </button>
           {SESSION_TYPES.map((t) => (
-            <option key={t.id} value={t.id}>
+            <button
+              key={t.id}
+              type="button"
+              className="seg-btn"
+              aria-pressed={typeFilter === t.id}
+              onClick={() => setTypeFilter(t.id)}
+            >
               {t.label}
-            </option>
+            </button>
           ))}
-        </select>
+        </div>
       </div>
 
       {filtered.length === 0 ? (
