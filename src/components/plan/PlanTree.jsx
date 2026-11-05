@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../../state/StoreContext.jsx'
 import { useToast } from '../../state/ToastContext.jsx'
 import { sessionTypeInfo } from '../../lib/taxonomy'
@@ -15,6 +15,24 @@ export default function PlanTree() {
   const toast = useToast()
   const dragCtx = useRef(null)
   const { plan, expanded, selectedPath } = state
+  const [openWeekMenu, setOpenWeekMenu] = useState(null)
+  const weekMenuRef = useRef(null)
+
+  useEffect(() => {
+    if (!openWeekMenu) return
+    function onDocMouseDown(e) {
+      if (weekMenuRef.current && !weekMenuRef.current.contains(e.target)) setOpenWeekMenu(null)
+    }
+    function onKeyDown(e) {
+      if (e.key === 'Escape') setOpenWeekMenu(null)
+    }
+    document.addEventListener('mousedown', onDocMouseDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onDocMouseDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [openWeekMenu])
 
   function select(path) {
     dispatch({ type: 'SELECT', path })
@@ -189,22 +207,58 @@ export default function PlanTree() {
                                                 {week.name}
                                                 <span className="tree-sub">{week.focus || ''}</span>
                                               </span>
-                                              <span className="tree-row-actions">
+                                              <span
+                                                className="tree-row-actions"
+                                                ref={openWeekMenu === week.id ? weekMenuRef : null}
+                                                style={openWeekMenu === week.id ? { display: 'flex' } : undefined}
+                                              >
                                                 <button
-                                                  className="btn btn-ghost btn-sm"
-                                                  onClick={(e) => { e.stopPropagation(); dispatch({ type: 'WEEK_COPY', ...ids, weekId: week.id }); toast('Week duplicated into the next slot') }}
+                                                  className="btn btn-ghost btn-sm kebab-btn"
+                                                  aria-label={`${week.name} actions`}
+                                                  aria-haspopup="true"
+                                                  aria-expanded={openWeekMenu === week.id}
+                                                  onClick={(e) => { e.stopPropagation(); setOpenWeekMenu(openWeekMenu === week.id ? null : week.id) }}
                                                 >
-                                                  Copy
+                                                  ⋮
                                                 </button>
-                                                <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); rename('week', [phase.id, sub.id, block.id, week.id], week.name) }}>
-                                                  Rename
-                                                </button>
-                                                <button
-                                                  className="btn btn-ghost btn-sm btn-danger-text"
-                                                  onClick={(e) => { e.stopPropagation(); remove('week', [phase.id, sub.id, block.id, week.id]) }}
-                                                >
-                                                  Delete
-                                                </button>
+                                                {openWeekMenu === week.id && (
+                                                  <div className="row-menu" role="menu">
+                                                    <button
+                                                      role="menuitem"
+                                                      className="row-menu-item"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setOpenWeekMenu(null)
+                                                        dispatch({ type: 'WEEK_COPY', ...ids, weekId: week.id })
+                                                        toast('Week duplicated into the next slot')
+                                                      }}
+                                                    >
+                                                      Copy
+                                                    </button>
+                                                    <button
+                                                      role="menuitem"
+                                                      className="row-menu-item"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setOpenWeekMenu(null)
+                                                        rename('week', [phase.id, sub.id, block.id, week.id], week.name)
+                                                      }}
+                                                    >
+                                                      Rename
+                                                    </button>
+                                                    <button
+                                                      role="menuitem"
+                                                      className="row-menu-item row-menu-item-danger"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setOpenWeekMenu(null)
+                                                        remove('week', [phase.id, sub.id, block.id, week.id])
+                                                      }}
+                                                    >
+                                                      Delete
+                                                    </button>
+                                                  </div>
+                                                )}
                                               </span>
                                             </div>
 
