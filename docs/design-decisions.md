@@ -102,3 +102,14 @@ Decisions made while fixing slice-1 QA findings, not yet reflected above.
 - **Dialogs:** every dialog is the shared `Modal` component (focus trap, Escape to close, `role="dialog"`, `aria-modal`, focus returned to the trigger on close), plus one shared `ConfirmDialog` variant for yes/no confirmations that states what will be lost, with a count where possible. Native `window.prompt`/`window.confirm` are gone from the app. **V13 (a single dialog system) is un-parked** — this is it. Undo is still parked; a confirm is the only safety net.
 - **Day slots and "Replace with another exercise" remain later slices** — nothing in slice 1b adds them, even where the mockups' dialog board shows them (Add-to-week's day/slot grid, the archive dialog's "Replace with…" option).
 - **Plan overview (season strip, block grid, quick-view panel) is slice 2** — planned before it's built; see `slice-2-plan.md`.
+
+## Supplement 2026-11-05 (plan overview answers)
+
+- **Plan start date is mandatory.** A future start date means the first block loads as "current"; otherwise current = the block containing today.
+- **Several sessions can share a day/slot cell** (the exception, so stack them). The "+" in an empty cell creates a new session with a default start time: 9:00 for AM, 15:00 for PM.
+- **Existing sessions migrate to unscheduled** (`day: null, slot: null`).
+- **Exercise groups are inserted as copies**, fine for individual plans; team plans and linked groups are a future question.
+- **Load metric is session RPE × duration**, defined in `docs/definitions.md`. Sessions get optional `plannedRpe` and `plannedMinutes`; load bars use them (slice 2).
+- **Session start time** (`startTime`) is editable and shown on the grid card.
+- **The live plan gets a `startDate` in the v5 → v6 migration, always a Monday** (proposed 2026-11-09, editable afterwards). New plans must ask for one, snapped to a Monday.
+- Details: `slice-2-plan.md`, decisions 8–10.
