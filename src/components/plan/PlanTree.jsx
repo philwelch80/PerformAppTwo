@@ -106,15 +106,6 @@ export default function PlanTree() {
 
   return (
     <div className="panel tree-panel">
-      <div className="tree-head">
-        <input
-          type="text"
-          className="plan-title-input"
-          value={plan.name}
-          onChange={(e) => dispatch({ type: 'PLAN_RENAME', name: e.target.value })}
-        />
-      </div>
-
       <ul className="tree tree-level-plan">
         {plan.phases.map((phase) => {
           const pExpanded = !!expanded[phase.id]

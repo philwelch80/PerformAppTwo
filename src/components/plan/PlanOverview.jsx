@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '../../state/StoreContext.jsx'
-import { useToast } from '../../state/ToastContext.jsx'
 import { weekName } from '../../lib/planTree'
-import { sessionTypeInfo } from '../../lib/taxonomy'
+import { SESSION_TYPES, sessionTypeInfo } from '../../lib/taxonomy'
 
 // Flattens the plan into weeks in order, each carrying its ancestors — the
 // season strip and block grid both need this same linear view the tree
@@ -50,9 +49,8 @@ function phaseSegments(weekRows) {
 }
 
 export default function PlanOverview() {
-  const { state, dispatch } = useStore()
-  const toast = useToast()
-  const { plan } = state
+  const { state } = useStore()
+  const { plan, selectedPath } = state
   const weekRows = useMemo(() => flattenWeeks(plan), [plan])
   const blocks = useMemo(() => groupByBlock(weekRows), [weekRows])
   const segments = useMemo(() => phaseSegments(weekRows), [weekRows])
@@ -70,12 +68,13 @@ export default function PlanOverview() {
   function jumpToWeek(weekId) {
     document.getElementById(`overview-week-${weekId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
-  function addWeekAtEnd() {
-    const last = blocks[blocks.length - 1]
-    if (!last) return
-    dispatch({ type: 'WEEK_ADD', phaseId: last.phase.id, subId: last.sub.id, blockId: last.block.id })
-    toast('Week added — plan extended without touching earlier weeks')
-  }
+
+  // Weeks belonging to a currently-open block light up in the season strip —
+  // "Outlined = weeks shown below" in the mockup.
+  const openWeekIds = new Set()
+  blocks.forEach((b, i) => {
+    if (!isCollapsed(b.block.id, i)) b.weeks.forEach((w) => openWeekIds.add(w.week.id))
+  })
 
   if (weekRows.length === 0) {
     return (
@@ -93,14 +92,14 @@ export default function PlanOverview() {
           <span className="subtle-label" style={{ marginBottom: 0 }}>
             Season · {weekRows.length} week{weekRows.length === 1 ? '' : 's'} · Planned load
           </span>
-          <span className="ex-desc">Click a week to jump.</span>
+          <span className="ex-desc">Click a week to jump. Outlined = weeks shown below.</span>
         </div>
         <div className="season-strip-bars">
           {weekRows.map((row, i) => (
             <button
               key={row.week.id}
               type="button"
-              className="season-bar"
+              className={`season-bar${openWeekIds.has(row.week.id) ? ' season-bar-open' : ''}`}
               onClick={() => jumpToWeek(row.week.id)}
               title={`Week ${i + 1} · ${row.block.name}`}
               aria-label={`Jump to week ${i + 1}`}
@@ -144,7 +143,11 @@ export default function PlanOverview() {
               {open && (
                 <div className="block-grid-rows">
                   {b.weeks.map((w) => (
-                    <div className="block-grid-row" id={`overview-week-${w.week.id}`} key={w.week.id}>
+                    <div
+                      className={`block-grid-row${selectedPath?.weekId === w.week.id ? ' selected' : ''}`}
+                      id={`overview-week-${w.week.id}`}
+                      key={w.week.id}
+                    >
                       <div className="block-grid-week-col">
                         <div className="block-grid-week-name">{weekName(b.block, w.week)}</div>
                         {w.week.focus && <div className="ex-desc">{w.week.focus}</div>}
@@ -171,12 +174,15 @@ export default function PlanOverview() {
             </div>
           )
         })}
+      </div>
 
-        <div className="tree-add-row" style={{ paddingLeft: 0 }}>
-          <button className="btn" onClick={addWeekAtEnd}>
-            + Add week at end
-          </button>
-        </div>
+      <div className="block-grid-legend">
+        {SESSION_TYPES.map((t) => (
+          <span className="legend-item" key={t.id}>
+            <span className={`legend-swatch ${t.dot}`} />
+            {t.label}
+          </span>
+        ))}
       </div>
     </div>
   )
