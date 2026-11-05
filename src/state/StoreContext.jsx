@@ -4,7 +4,7 @@ import { freshState } from '../lib/seed'
 import { supabase } from '../lib/supabaseClient'
 import { CURRENT_VERSION, isNewerThanSupported, migrate } from '../lib/migrate'
 
-const ROW_ID = import.meta.env.VITE_STATE_ROW_ID || 'singleton'
+export const ROW_ID = import.meta.env.VITE_STATE_ROW_ID || 'singleton'
 const SAVE_DEBOUNCE_MS = 600
 const POLL_INTERVAL_MS = 8000
 
@@ -32,6 +32,9 @@ export function StoreProvider({ children }) {
   const lastSyncedAt = useRef(null)
   const saveTimer = useRef(null)
   const savingRef = useRef(false)
+  // True from the moment a local edit schedules a save until that save
+  // actually lands — a poll must never hydrate over an edit still in flight.
+  const pendingSaveRef = useRef(false)
   const skippedInitialSave = useRef(false)
 
   // Initial load: adopt whatever's already shared, or seed the row if this
@@ -80,6 +83,7 @@ export function StoreProvider({ children }) {
       skippedInitialSave.current = true
       return
     }
+    pendingSaveRef.current = true
     clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(async () => {
       savingRef.current = true
@@ -90,6 +94,7 @@ export function StoreProvider({ children }) {
         .select()
         .single()
       savingRef.current = false
+      pendingSaveRef.current = false
       if (error) setSyncError(error.message)
       else {
         lastSyncedAt.current = data.updated_at
@@ -104,7 +109,7 @@ export function StoreProvider({ children }) {
   useEffect(() => {
     if (!ready) return
     const interval = setInterval(async () => {
-      if (savingRef.current) return
+      if (savingRef.current || pendingSaveRef.current) return
       const { data, error } = await supabase.from('plan_builder_state').select('updated_at').eq('id', ROW_ID).maybeSingle()
       if (error || !data) return
       if (lastSyncedAt.current && data.updated_at <= lastSyncedAt.current) return

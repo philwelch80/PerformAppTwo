@@ -22,6 +22,19 @@ function sessionAt(draft, path) {
   return locatePath(draft.plan, path).session
 }
 
+// Whether a selection still has something to point at after a hydrate —
+// checked only down to the deepest level the path actually names, so e.g. a
+// phase-only selection isn't invalidated by a change deeper in the tree.
+function pathResolves(plan, path) {
+  const { phase, sub, block, week, session } = locatePath(plan, path)
+  if (path.sessionId) return !!session
+  if (path.weekId) return !!week
+  if (path.blockId) return !!block
+  if (path.subId) return !!sub
+  if (path.phaseId) return !!phase
+  return true
+}
+
 export function reducer(state, action) {
   return produce(state, (draft) => {
     switch (action.type) {
@@ -34,8 +47,19 @@ export function reducer(state, action) {
         draft.plan = action.payload.plan
         draft.savedSessions = action.payload.savedSessions
         draft.exerciseGroups = action.payload.exerciseGroups
-        draft.expanded = expandedFromPlan(action.payload.plan)
-        draft.selectedPath = null
+
+        // Add expand state for anything new (e.g. a week someone else just
+        // added), but never touch this viewer's own expand/collapse choices.
+        const freshExpanded = expandedFromPlan(action.payload.plan)
+        for (const id in freshExpanded) {
+          if (!(id in draft.expanded)) draft.expanded[id] = freshExpanded[id]
+        }
+
+        // selectedPath is this viewer's own navigation, not shared state —
+        // only clear it if the node it names is actually gone.
+        if (draft.selectedPath && !pathResolves(draft.plan, draft.selectedPath)) {
+          draft.selectedPath = null
+        }
         break
       }
 

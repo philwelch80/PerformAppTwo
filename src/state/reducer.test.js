@@ -164,6 +164,45 @@ describe('EXERCISE_GROUP_UPDATE / DUPLICATE / ITEM_*', () => {
   })
 })
 
+describe('HYDRATE', () => {
+  it('keeps a selection and its expand state when the selected node still exists', () => {
+    const state = initialState()
+    const path = pathToSession(state, 'Lower A')
+    const selected = { ...state, selectedPath: path, expanded: { ...state.expanded, [path.weekId]: false } }
+
+    const next = reducer(selected, { type: 'HYDRATE', payload: { ...state } })
+    expect(next.selectedPath).toEqual(path)
+    expect(next.expanded[path.weekId]).toBe(false) // this viewer's own collapse choice survives
+  })
+
+  it('clears the selection only when the selected node is gone from the hydrated plan', () => {
+    const state = initialState()
+    const path = pathToSession(state, 'Lower A')
+    const selected = { ...state, selectedPath: path }
+
+    const week = state.plan.phases[0].subphases[0].blocks[0].weeks.find((w) => w.id === path.weekId)
+    const payload = { ...state, plan: { ...state.plan, phases: [{ ...state.plan.phases[0], subphases: [{ ...state.plan.phases[0].subphases[0], blocks: [{ ...state.plan.phases[0].subphases[0].blocks[0], weeks: state.plan.phases[0].subphases[0].blocks[0].weeks.filter((w) => w.id !== week.id) }] }] }] } }
+
+    const next = reducer(selected, { type: 'HYDRATE', payload })
+    expect(next.selectedPath).toBeNull()
+  })
+
+  it('adds expand state for nodes new to this viewer without resetting existing ones', () => {
+    const state = initialState()
+    const collapsed = { ...state, expanded: { someId: false } }
+    const next = reducer(collapsed, { type: 'HYDRATE', payload: { ...state } })
+    expect(next.expanded.someId).toBe(false)
+    expect(next.expanded[state.plan.phases[0].id]).toBe(true)
+  })
+
+  it('replaces only the shared slice, never touching selectedPath/expanded directly', () => {
+    const state = initialState()
+    const withExtraExercise = { ...state, exercises: [...state.exercises, { id: 'ex_new', name: 'New', tags: [], archived: false }] }
+    const next = reducer(state, { type: 'HYDRATE', payload: withExtraExercise })
+    expect(next.exercises.find((e) => e.id === 'ex_new')).toBeDefined()
+  })
+})
+
 describe('editing a saved session template directly (path.savedSessionId)', () => {
   it('renames and edits a saved session template in place, without touching the plan', () => {
     const state = initialState()
