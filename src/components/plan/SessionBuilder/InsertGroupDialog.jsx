@@ -35,7 +35,7 @@ export default function InsertGroupDialog({ session, onInsert, onClose }) {
           ×
         </button>
       </div>
-      <p style={{ color: 'var(--ink-soft)', marginTop: 0 }}>
+      <p style={{ color: 'var(--text-soft)', marginTop: 0 }}>
         Adds a copy of the exercise group to this session. Editing it afterwards doesn&apos;t change the saved group.
       </p>
 

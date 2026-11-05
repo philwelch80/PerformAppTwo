@@ -25,7 +25,7 @@ export default function ExerciseUsageDialog({ exerciseName, usage, onArchive, on
           ×
         </button>
       </div>
-      <p style={{ color: 'var(--ink-soft)', marginTop: 0 }}>
+      <p style={{ color: 'var(--text-soft)', marginTop: 0 }}>
         It&apos;s used in {parts.join(' and ')}, so it can&apos;t be deleted. Archiving hides it from the library and
         picker — it keeps working everywhere it&apos;s already used, and you can restore it later.
       </p>

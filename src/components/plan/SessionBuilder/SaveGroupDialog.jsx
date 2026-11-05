@@ -24,7 +24,7 @@ export default function SaveGroupDialog({ group, defaultName, onSave, onClose })
           ×
         </button>
       </div>
-      <p style={{ color: 'var(--ink-soft)', marginTop: 0 }}>Saves this group so you can drop it into any session.</p>
+      <p style={{ color: 'var(--text-soft)', marginTop: 0 }}>Saves this group so you can drop it into any session.</p>
 
       <div className="field">
         <label htmlFor="save-group-name">Group name</label>
@@ -63,7 +63,7 @@ export default function SaveGroupDialog({ group, defaultName, onSave, onClose })
         {group.isSuperset && <div className="ex-desc" style={{ marginTop: 6 }}>Stays a superset — alternates one set at a time.</div>}
       </div>
 
-      <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 400, color: 'var(--ink)' }}>
+      <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 400, color: 'var(--text)' }}>
         <input type="checkbox" style={{ width: 'auto' }} checked={includeWeights} onChange={(e) => setIncludeWeights(e.target.checked)} />
         Include starting weights
       </label>

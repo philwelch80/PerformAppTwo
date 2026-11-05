@@ -8,7 +8,7 @@ export default function ConfirmDialog({ title, description, confirmLabel = 'Dele
       <div className="modal-head">
         <h3 id="confirm-dialog-title">{title}</h3>
       </div>
-      {description && <p style={{ color: 'var(--ink-soft)', marginTop: 0 }}>{description}</p>}
+      {description && <p style={{ color: 'var(--text-soft)', marginTop: 0 }}>{description}</p>}
       <div className="modal-actions">
         <button className="btn" onClick={onCancel}>
           {cancelLabel}

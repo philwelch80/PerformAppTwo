@@ -126,7 +126,7 @@ export default function ExerciseModal({ editingId, onClose }) {
           <label>Body area(s)</label>
           <div>
             {BODY_AREAS.map((b) => (
-              <label key={b} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, margin: '2px 8px 2px 0', fontWeight: 400, color: 'var(--ink)' }}>
+              <label key={b} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, margin: '2px 8px 2px 0', fontWeight: 400, color: 'var(--text)' }}>
                 <input type="checkbox" style={{ width: 'auto' }} checked={form.bodyAreas.includes(b)} onChange={() => toggleBodyArea(b)} />
                 {b}
               </label>

@@ -75,7 +75,7 @@ export default function ExercisesTab() {
           <TagFilterPills counts={counts} active={filter.tag} onSelect={(tag) => setFilter({ ...filter, tag: tag || '' })} />
         </div>
 
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 400, color: 'var(--ink)' }}>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 400, color: 'var(--text)' }}>
           <input
             type="checkbox"
             style={{ width: 'auto' }}

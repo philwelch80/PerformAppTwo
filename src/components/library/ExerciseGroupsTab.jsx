@@ -65,7 +65,7 @@ export default function ExerciseGroupsTab() {
           </select>
         </div>
 
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 400, color: 'var(--ink)' }}>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 400, color: 'var(--text)' }}>
           <input
             type="checkbox"
             style={{ width: 'auto' }}
