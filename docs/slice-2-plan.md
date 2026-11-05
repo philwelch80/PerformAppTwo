@@ -1,6 +1,6 @@
 # Slice 2 — Plan overview (season strip, block grid, quick-view panel)
 
-Status: **Slice 2a done (grid shell, no schema change). Open questions 1–7 answered 2026-11-05, plus a second round (8–10) — see Decisions below. Building 2b next.** Branch: `redesign/slice-1-library`.
+Status: **Slice 2a and 2b done (grid shell; day/slot data model, v5→v6 migration, real grid with drag + "Move to..." menu, current-block default, season-strip load bars). Decisions 1–10 below are all built. Stopped for approval before slice 2c (quick-view panel).** Branch: `redesign/slice-1-library`.
 
 > **Version note:** the brief that asked for this plan said "the schemaVersion 3 migration step." That's stale — the slice-1 QA-fix pass already moved the schema from v2 to v5 (reps as text, tag normalization, position-numbered weeks). The day/slot migration below is **v5 → v6**.
 
@@ -40,7 +40,7 @@ Adds real placement so the grid's columns mean something.
 - **Unscheduled area:** a visible row (or panel) per week — probably above or below that week's day columns — listing sessions with no day/slot, so nothing silently disappears after migration. A coach drags (or otherwise assigns) a session from there onto a day/slot cell.
 - **Grid becomes real:** each week row's cells are keyed by `(day, slot)`; a session renders in its cell instead of the placeholder single list from 2a.
 - **New reducer action:** `SESSION_SCHEDULE_UPDATE` (path, day, slot) — the only state change this slice needs beyond the migration itself.
-- **Drag to move a session** between cells (or into/out of "unscheduled") — this is slice 2's version of the already-parked **S2** finding (drag-and-drop needs a manual test pass, not just automated browser verification); flag it the same way here.
+- **Drag to move a session** between cells (or into/out of "unscheduled") — this is slice 2's version of the already-parked **S2** finding (drag-and-drop needs a manual test pass, not just automated browser verification); flag it the same way here. Scoped to within the session's own week (parking lot **S4**) — `SESSION_SCHEDULE_UPDATE` changes day/slot/startTime, not which week a session belongs to.
 - **Newer-version guard:** unchanged mechanism — `isNewerThanSupported` already rejects saving over a row with a higher `schemaVersion` than the running client understands; this slice doesn't change that logic, only adds one more version step for it to guard.
 - **Test plan:** before merging, run `migrate()` against a copy of the live `singleton` row's current JSON (fetched read-only) and confirm every session ends up `day: null, slot: null`, the migration is idempotent, and it doesn't mutate its input — same discipline as the v2–v5 migrations already shipped. Never try it against `singleton` itself; use `VITE_STATE_ROW_ID=dev`.
 

@@ -12,9 +12,10 @@ Findings from the slice-1 QA review that are explicitly out of scope for now —
 | V17 | No detail given in the QA pass this parking lot was written from — ask for the finding text before scoping it. | |
 | V19 | No detail given in the QA pass this parking lot was written from — ask for the finding text before scoping it. | |
 | V21 | A real load/tempo/rest model for strength sets — today there's only `startingWeight` (free text) alongside sets/reps. | |
-| S2 | Drag-and-drop reordering (weeks, sessions, routine items) needs a manual test pass — it can't be verified by the automated browser tooling used for this round of fixes. | |
+| S2 | Drag-and-drop reordering (weeks, sessions, routine items) needs a manual test pass — it can't be verified by the automated browser tooling used for this round of fixes. Slice 2b adds the same gap for dragging a session between grid cells/Unscheduled: the "Move to..." menu on each session chip was click-tested end to end (schedule, re-schedule into an occupied cell, move back to Unscheduled), but the native HTML5 drag itself still needs a coach's hands. | |
 | S3 | Concurrent-edit handling — the app is explicitly last-write-wins with no conflict resolution (see CLAUDE.md's "Sync" section); a real merge/locking story is out of scope. | |
 | S6 | Large-plan performance — untested with a plan of realistic size (many phases/weeks/sessions); the tree and sync payload are both O(whole plan). | |
+| S4 | Cross-week drag/move. `SESSION_SCHEDULE_UPDATE` only changes a session's day/slot/startTime, not which week it belongs to — a session can't be dragged (or moved via the "Move to..." menu) into a different week's grid, only within its own week. The `PlanOverview.png` mockup's caption ("Drag a session to any day or week") implies cross-week drag; that would need a reducer action that also relocates the session in the tree, which isn't in slice 2b's scope. | |
 
 ## Missing, for a coach to actually use this
 
