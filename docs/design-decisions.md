@@ -75,13 +75,13 @@ Save as exercise group · Insert exercise group (search, pick, position) · Add 
 
 ## 9. Visual style
 
-**Decided 2026-11-05: match the mockups.** Teal accent `#0B6B5D` (darker `#0B4F44`, soft `#DCEBE8`); dark header `#101418`; page background `#F3F5F4`; surfaces white; borders `#DDE2E0` / `#C3CBC9`; secondary text `#44504E` and `#5B6563` (darkened from the mockups' `#6B7775`, which fell under 4.5:1 on the page background — see §S5 in `parking-lot.md`). Font is Inter Tight (400/500/600/700), replacing IBM Plex Sans/Mono; tabular numerals are kept globally via `font-variant-numeric: tabular-nums` rather than a dedicated mono class. Light theme only — the `prefers-color-scheme: dark` variant is removed; there is no theme toggle.
+**Decided 2026-11-05: match the mockups.** Teal accent `#0B6B5D` (darker `#0B4F44`, soft `#DCEBE8`); dark header `#101418`; page background `#F3F5F4`; surfaces white; borders `#DDE2E0` / `#C3CBC9`; secondary text `#44504E` and `#5B6563` (darkened from the mockups' `#6B7775`, which fell under 4.5:1 on the page background — see §S5 in `parking-lot.md`). Font is Inter Tight (400/500/600/700), replacing IBM Plex Sans/Mono. The amber/IBM Plex look the first build shipped with is replaced; a warmer old-PerformApp palette was compared earlier and not chosen. Images are in `docs/mockups/` (see its README).
 
-Session-type colors (always paired with the S/C/R letter, not color alone): strength bg `#DCEBE8` / text `#0B4F44`; conditioning bg `#E3E8F6` / text `#1F3A7A`; routines bg `#F3E6D8` / text `#7A3E0F`. Strength's tokens (`--strength`/`--strength-soft`) are kept separate from the brand accent tokens (`--accent`/`--accent-soft`) even though the values currently match, so the two can diverge later without re-coupling session-type color to brand color.
-
-Phase/subphase/block bands (outline tree and the plan grid) stay a neutral scale, never session-type tints — **this overrides what the PlanOverview/PlanBuilder mockup images show** (their block headers are tinted by phase); §5 above already called this out and nothing here changes it.
-
-A warmer take on the old PerformApp palette (amber, blue/green, slab-serif titles) was compared earlier and not chosen.
+- **Dark mode:** dropped for the prototype (the mockups are light only; there's no theme toggle). The `prefers-color-scheme` block is removed rather than left half-styled.
+- **Numbers:** tabular numerals are kept globally for sets, reps and load via `font-variant-numeric: tabular-nums` (Inter Tight supports it; no second/mono font needed).
+- **Session-type colors** (soft tint + dark text, always paired with the S/C/R letter, never color alone): strength bg `#DCEBE8` / text `#0B4F44`; conditioning bg `#E3E8F6` / text `#1F3A7A`; routines bg `#F3E6D8` / text `#7A3E0F`. Strength's tokens (`--strength`/`--strength-soft`) are kept separate from the brand accent tokens (`--accent`/`--accent-soft`) even though the values currently match, so the two can diverge later without re-coupling session-type color to brand color.
+- **Phase/subphase/block bands** (outline tree and the plan grid) stay a neutral scale, never session-type tints — this overrides what the PlanOverview/PlanBuilder mockup images show (their block headers are tinted by phase); §5 above already called this out and nothing here changes it.
+- Accessibility rules in CLAUDE.md still win over the mockups (44px targets, 4.5:1 text contrast — measured, not assumed; see §S5 in `parking-lot.md`).
 
 ## 10. Open items
 
