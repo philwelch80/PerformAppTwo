@@ -3,6 +3,8 @@ import { useStore } from '../../state/StoreContext.jsx'
 import { allWeeksWithPath } from '../../lib/planTree'
 import Modal from '../common/Modal.jsx'
 
+// Week only, for now — the mockup's day/AM-PM slot grid needs the day/slot
+// data model from slice 2, so this picks a week and nothing more.
 export default function AddToWeekDialog({ sessionName, onConfirm, onCancel }) {
   const { state } = useStore()
   const weeks = allWeeksWithPath(state.plan)
