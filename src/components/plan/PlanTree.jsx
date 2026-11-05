@@ -100,17 +100,21 @@ export default function PlanTree() {
           const pExpanded = !!expanded[phase.id]
           return (
             <li className="tree-node" key={phase.id}>
-              <div
-                className={`tree-row${isSelected(selectedPath, 'phaseId', phase.id) ? ' selected' : ''}`}
-                onClick={() => select({ phaseId: phase.id })}
-              >
-                <button className="disclosure" onClick={(e) => { e.stopPropagation(); toggle(phase.id) }}>
+              <div className={`tree-row${isSelected(selectedPath, 'phaseId', phase.id) ? ' selected' : ''}`}>
+                <button
+                  className="disclosure"
+                  aria-label={`${pExpanded ? 'Collapse' : 'Expand'} ${phase.name}`}
+                  aria-expanded={pExpanded}
+                  onClick={(e) => { e.stopPropagation(); toggle(phase.id) }}
+                >
                   {pExpanded ? '▼' : '▶'}
                 </button>
-                <span className="tree-label">
-                  {phase.name}
-                  <span className="tree-sub">Phase</span>
-                </span>
+                <button type="button" className="tree-row-select" onClick={() => select({ phaseId: phase.id })}>
+                  <span className="tree-label">
+                    {phase.name}
+                    <span className="tree-sub">Phase</span>
+                  </span>
+                </button>
                 <span className="tree-row-actions">
                   <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); rename('phase', [phase.id], phase.name) }}>
                     Rename
@@ -127,17 +131,21 @@ export default function PlanTree() {
                     const sExpanded = !!expanded[sub.id]
                     return (
                       <div className="tree-node" key={sub.id}>
-                        <div
-                          className={`tree-row${isSelected(selectedPath, 'subId', sub.id) ? ' selected' : ''}`}
-                          onClick={() => select({ phaseId: phase.id, subId: sub.id })}
-                        >
-                          <button className="disclosure" onClick={(e) => { e.stopPropagation(); toggle(sub.id) }}>
+                        <div className={`tree-row${isSelected(selectedPath, 'subId', sub.id) ? ' selected' : ''}`}>
+                          <button
+                            className="disclosure"
+                            aria-label={`${sExpanded ? 'Collapse' : 'Expand'} ${sub.name}`}
+                            aria-expanded={sExpanded}
+                            onClick={(e) => { e.stopPropagation(); toggle(sub.id) }}
+                          >
                             {sExpanded ? '▼' : '▶'}
                           </button>
-                          <span className="tree-label">
-                            {sub.name}
-                            <span className="tree-sub">Subphase</span>
-                          </span>
+                          <button type="button" className="tree-row-select" onClick={() => select({ phaseId: phase.id, subId: sub.id })}>
+                            <span className="tree-label">
+                              {sub.name}
+                              <span className="tree-sub">Subphase</span>
+                            </span>
+                          </button>
                           <span className="tree-row-actions">
                             <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); rename('sub', [phase.id, sub.id], sub.name) }}>
                               Rename
@@ -154,17 +162,25 @@ export default function PlanTree() {
                               const bExpanded = !!expanded[block.id]
                               return (
                                 <div className="tree-node" key={block.id}>
-                                  <div
-                                    className={`tree-row${isSelected(selectedPath, 'blockId', block.id) ? ' selected' : ''}`}
-                                    onClick={() => select({ phaseId: phase.id, subId: sub.id, blockId: block.id })}
-                                  >
-                                    <button className="disclosure" onClick={(e) => { e.stopPropagation(); toggle(block.id) }}>
+                                  <div className={`tree-row${isSelected(selectedPath, 'blockId', block.id) ? ' selected' : ''}`}>
+                                    <button
+                                      className="disclosure"
+                                      aria-label={`${bExpanded ? 'Collapse' : 'Expand'} ${block.name}`}
+                                      aria-expanded={bExpanded}
+                                      onClick={(e) => { e.stopPropagation(); toggle(block.id) }}
+                                    >
                                       {bExpanded ? '▼' : '▶'}
                                     </button>
-                                    <span className="tree-label">
-                                      {block.name}
-                                      <span className="tree-sub">Block</span>
-                                    </span>
+                                    <button
+                                      type="button"
+                                      className="tree-row-select"
+                                      onClick={() => select({ phaseId: phase.id, subId: sub.id, blockId: block.id })}
+                                    >
+                                      <span className="tree-label">
+                                        {block.name}
+                                        <span className="tree-sub">Block</span>
+                                      </span>
+                                    </button>
                                     <span className="tree-row-actions">
                                       <button
                                         className="btn btn-ghost btn-sm"
@@ -195,18 +211,27 @@ export default function PlanTree() {
                                             onDragOver={(e) => e.preventDefault()}
                                             onDrop={(e) => { e.preventDefault(); onWeekDrop(ids, week.id) }}
                                           >
-                                            <div
-                                              className={`tree-row${isSelected(selectedPath, 'weekId', week.id) ? ' selected' : ''}`}
-                                              onClick={() => select({ ...ids, weekId: week.id })}
-                                            >
+                                            <div className={`tree-row${isSelected(selectedPath, 'weekId', week.id) ? ' selected' : ''}`}>
                                               <span className="drag-handle" title="Drag to reorder within this block">⋮⋮</span>
-                                              <button className="disclosure" onClick={(e) => { e.stopPropagation(); toggle(week.id) }}>
+                                              <button
+                                                className="disclosure"
+                                                aria-label={`${wExpanded ? 'Collapse' : 'Expand'} ${week.name}`}
+                                                aria-expanded={wExpanded}
+                                                onClick={(e) => { e.stopPropagation(); toggle(week.id) }}
+                                              >
                                                 {wExpanded ? '▼' : '▶'}
                                               </button>
-                                              <span className="tree-label">
-                                                {week.name}
-                                                <span className="tree-sub">{week.focus || ''}</span>
-                                              </span>
+                                              <button
+                                                type="button"
+                                                className="tree-row-select"
+                                                onClick={() => select({ ...ids, weekId: week.id })}
+                                                title={week.focus || undefined}
+                                              >
+                                                <span className="tree-label">
+                                                  {week.name}
+                                                  <span className="tree-sub">{week.focus || ''}</span>
+                                                </span>
+                                              </button>
                                               <span
                                                 className="tree-row-actions"
                                                 ref={openWeekMenu === week.id ? weekMenuRef : null}
@@ -275,13 +300,17 @@ export default function PlanTree() {
                                                       onDragOver={(e) => e.preventDefault()}
                                                       onDrop={(e) => { e.preventDefault(); onSessionDrop({ ...ids, weekId: week.id }, session.id) }}
                                                     >
-                                                      <div
-                                                        className={`tree-row${isSelected(selectedPath, 'sessionId', session.id) ? ' selected' : ''}`}
-                                                        onClick={() => select({ ...ids, weekId: week.id, sessionId: session.id })}
-                                                      >
+                                                      <div className={`tree-row${isSelected(selectedPath, 'sessionId', session.id) ? ' selected' : ''}`}>
                                                         <span className="drag-handle" title="Drag to reorder within this week">⋮⋮</span>
-                                                        <span className={`session-type-dot ${typeInfo.dot}`} />
-                                                        <span className="tree-label">{session.name}</span>
+                                                        <button
+                                                          type="button"
+                                                          className="tree-row-select"
+                                                          onClick={() => select({ ...ids, weekId: week.id, sessionId: session.id })}
+                                                        >
+                                                          <span className={`session-type-dot ${typeInfo.dot}`} />
+                                                          <span className="session-type-letter">{typeInfo.letter}</span>
+                                                          <span className="tree-label">{session.name}</span>
+                                                        </button>
                                                         <span className="tree-row-actions">
                                                           <button
                                                             className="btn btn-ghost btn-sm btn-danger-text"

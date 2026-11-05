@@ -48,9 +48,9 @@ export default function App() {
       <>
         {header}
         {devBanner}
-        <div className="shell">
+        <main className="shell">
           <div className="detail-empty">Loading the shared plan…</div>
-        </div>
+        </main>
       </>
     )
   }
@@ -60,7 +60,7 @@ export default function App() {
       <>
         {header}
         {devBanner}
-        <div className="shell">
+        <main className="shell">
           <div className="empty-state" style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}>
             Someone saved a newer version of this plan than this tab understands. Reload to pick it up — this
             tab won&apos;t save over it until you do.
@@ -68,7 +68,7 @@ export default function App() {
           <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => window.location.reload()}>
             Reload
           </button>
-        </div>
+        </main>
       </>
     )
   }
@@ -77,7 +77,7 @@ export default function App() {
     <>
       {header}
       {devBanner}
-      <div className="shell">
+      <main className="shell">
         <div className="app-subbar">
           <div className="topbar-note">
             This tests the <b>data model and interactions</b> for the coach side only — not the final look.
@@ -112,7 +112,7 @@ export default function App() {
             {resetting ? 'Resetting…' : 'Reset demo data'}
           </button>
         </div>
-      </div>
+      </main>
     </>
   )
 }

@@ -46,9 +46,9 @@ export const CONDITIONING_TARGET_TYPES = [
 ]
 
 export const SESSION_TYPES = [
-  { id: 'strength', label: 'Strength', dot: 'dot-strength', badge: 'type-strength' },
-  { id: 'conditioning', label: 'Conditioning', dot: 'dot-conditioning', badge: 'type-conditioning' },
-  { id: 'routines', label: 'Routines', dot: 'dot-routines', badge: 'type-routines' },
+  { id: 'strength', label: 'Strength', dot: 'dot-strength', badge: 'type-strength', letter: 'S' },
+  { id: 'conditioning', label: 'Conditioning', dot: 'dot-conditioning', badge: 'type-conditioning', letter: 'C' },
+  { id: 'routines', label: 'Routines', dot: 'dot-routines', badge: 'type-routines', letter: 'R' },
 ]
 
 export function sessionTypeInfo(type) {

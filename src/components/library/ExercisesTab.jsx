@@ -29,6 +29,7 @@ export default function ExercisesTab() {
       <aside className="library-sidebar">
         <input
           type="text"
+          aria-label="Search exercises"
           placeholder="Search exercises…"
           value={filter.q}
           onChange={(e) => setFilter({ ...filter, q: e.target.value })}

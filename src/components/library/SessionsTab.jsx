@@ -21,7 +21,7 @@ export default function SessionsTab() {
   return (
     <div>
       <div className="lib-toolbar" style={{ justifyContent: 'space-between' }}>
-        <input type="text" placeholder="Search sessions…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input type="text" aria-label="Search sessions" placeholder="Search sessions…" value={q} onChange={(e) => setQ(e.target.value)} />
         <div className="seg-control">
           <button type="button" className="seg-btn" aria-pressed={typeFilter === ''} onClick={() => setTypeFilter('')}>
             All

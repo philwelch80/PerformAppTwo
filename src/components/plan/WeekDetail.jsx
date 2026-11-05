@@ -81,7 +81,12 @@ export default function WeekDetail({ path, week }) {
 
           {state.savedSessions.length > 0 && (
             <>
-              <select value={templateId} onChange={(e) => setTemplateId(e.target.value)} style={{ maxWidth: 200 }}>
+              <select
+                aria-label="Insert saved session"
+                value={templateId}
+                onChange={(e) => setTemplateId(e.target.value)}
+                style={{ maxWidth: 200 }}
+              >
                 <option value="">Insert saved session…</option>
                 {state.savedSessions.map((s) => (
                   <option key={s.id} value={s.id}>

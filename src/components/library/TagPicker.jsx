@@ -51,6 +51,7 @@ export default function TagPicker({ allTags, selected, onChange }) {
           <input
             type="text"
             autoFocus
+            aria-label="New tag"
             placeholder="New tag"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}

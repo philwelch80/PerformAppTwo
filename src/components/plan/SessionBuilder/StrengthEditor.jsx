@@ -80,12 +80,14 @@ export default function StrengthEditor({ path, session }) {
                   />
                   <input
                     type="text"
+                    aria-label="Starting weight"
                     placeholder="optional"
                     value={item.startingWeight}
                     onChange={(e) => dispatch({ type: 'GROUP_ITEM_UPDATE', path, groupId: group.id, itemIndex: index, field: 'startingWeight', value: e.target.value })}
                   />
                   <button
                     className="btn btn-ghost btn-sm btn-danger-text"
+                    aria-label={`Remove ${ex ? ex.name : 'exercise'}`}
                     onClick={() => dispatch({ type: 'GROUP_ITEM_DELETE', path, groupId: group.id, itemIndex: index })}
                   >
                     ×

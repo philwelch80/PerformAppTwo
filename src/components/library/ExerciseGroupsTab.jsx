@@ -31,6 +31,7 @@ export default function ExerciseGroupsTab() {
       <aside className="library-sidebar">
         <input
           type="text"
+          aria-label="Search exercise groups"
           placeholder="Search exercise groups…"
           value={filter.q}
           onChange={(e) => setFilter({ ...filter, q: e.target.value })}
@@ -38,7 +39,11 @@ export default function ExerciseGroupsTab() {
 
         <div className="sidebar-group">
           <div className="subtle-label">Contains exercise</div>
-          <select value={filter.exerciseId} onChange={(e) => setFilter({ ...filter, exerciseId: e.target.value })}>
+          <select
+            aria-label="Contains exercise"
+            value={filter.exerciseId}
+            onChange={(e) => setFilter({ ...filter, exerciseId: e.target.value })}
+          >
             <option value="">Any exercise</option>
             {state.exercises.map((ex) => (
               <option key={ex.id} value={ex.id}>
