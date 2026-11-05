@@ -157,6 +157,7 @@ export default function PlanOverview() {
                             const t = sessionTypeInfo(s.type)
                             return (
                               <span className={`type-badge ${t.badge}`} key={s.id}>
+                                <span className="type-badge-letter">{t.letter}</span>
                                 {s.name}
                               </span>
                             )
