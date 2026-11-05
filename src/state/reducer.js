@@ -9,10 +9,12 @@ import {
   getSub,
   getBlock,
   getWeek,
+  getSession,
   locatePath,
   resolveNode,
   deleteNode,
   cloneWeekWithFreshIds,
+  cloneSessionWithFreshIds,
   moveWithinArray,
 } from '../lib/planTree'
 
@@ -194,6 +196,17 @@ export function reducer(state, action) {
           weekId: action.weekId,
           sessionId: session.id,
         }
+        break
+      }
+      case 'SESSION_DUPLICATE': {
+        const week = getWeek(getBlock(getSub(getPhase(draft.plan, action.phaseId), action.subId), action.blockId), action.weekId)
+        const session = getSession(week, action.sessionId)
+        if (!session) break
+        const copy = cloneSessionWithFreshIds(session)
+        copy.name = `${session.name} copy`
+        const idx = week.sessions.findIndex((s) => s.id === session.id)
+        week.sessions.splice(idx + 1, 0, copy)
+        draft.selectedPath = { phaseId: action.phaseId, subId: action.subId, blockId: action.blockId, weekId: action.weekId, sessionId: copy.id }
         break
       }
       case 'NODE_RENAME': {

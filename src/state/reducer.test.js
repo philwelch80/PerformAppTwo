@@ -387,6 +387,39 @@ describe('SESSION_PLANNED_UPDATE', () => {
   })
 })
 
+describe('SESSION_DUPLICATE', () => {
+  it('inserts a copy right after the original with a fresh id and "copy" suffix', () => {
+    const state = initialState()
+    const path = pathToSession(state, 'Lower A')
+    const next = reducer(state, { type: 'SESSION_DUPLICATE', ...path })
+    const week = next.plan.phases[0].subphases[0].blocks[0].weeks[0]
+    const names = week.sessions.map((s) => s.name)
+    expect(names).toEqual(['Lower A', 'Lower A copy', 'Tempo Run', 'Mobility Flow'])
+    expect(week.sessions[1].id).not.toBe(path.sessionId)
+    expect(next.selectedPath.sessionId).toBe(week.sessions[1].id)
+  })
+
+  it('gives the copied groups fresh ids, independent of the original', () => {
+    const state = initialState()
+    const path = pathToSession(state, 'Lower A')
+    const original = sessionByName(state, 'Lower A')
+    const next = reducer(state, { type: 'SESSION_DUPLICATE', ...path })
+    const copy = next.plan.phases[0].subphases[0].blocks[0].weeks[0].sessions[1]
+    expect(copy.data.groups.map((g) => g.id)).not.toEqual(original.data.groups.map((g) => g.id))
+  })
+
+  it('preserves the original\'s day/slot/startTime on the copy', () => {
+    const state = initialState()
+    const path = pathToSession(state, 'Lower A')
+    const scheduled = reducer(state, { type: 'SESSION_SCHEDULE_UPDATE', path, day: 2, slot: 1 })
+    const next = reducer(scheduled, { type: 'SESSION_DUPLICATE', ...path })
+    const copy = next.plan.phases[0].subphases[0].blocks[0].weeks[0].sessions[1]
+    expect(copy.day).toBe(2)
+    expect(copy.slot).toBe(1)
+    expect(copy.startTime).toBe('15:00')
+  })
+})
+
 describe('PLAN_START_DATE_UPDATE', () => {
   it('snaps a mid-week date to that week\'s Monday', () => {
     const state = initialState()

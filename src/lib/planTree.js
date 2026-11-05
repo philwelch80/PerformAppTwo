@@ -83,6 +83,20 @@ export function cloneWeekWithFreshIds(week) {
   return copy
 }
 
+// Deep-clones a session and assigns fresh ids to it and its groups, so a
+// duplicate is fully independent of its source (same pattern as
+// cloneWeekWithFreshIds).
+export function cloneSessionWithFreshIds(session) {
+  const copy = JSON.parse(JSON.stringify(session))
+  copy.id = uid('sess')
+  if (copy.data?.groups) {
+    copy.data.groups.forEach((g) => {
+      g.id = uid('grp')
+    })
+  }
+  return copy
+}
+
 // Flattened weeks with their full path and a breadcrumb label, for a
 // single-select "which week" picker (e.g. the Library's "Add to week").
 export function allWeeksWithPath(plan) {
