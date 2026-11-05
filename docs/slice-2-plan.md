@@ -1,6 +1,6 @@
 # Slice 2 — Plan overview (season strip, block grid, quick-view panel)
 
-Status: **draft for approval — do not build any of this yet.** Branch: `redesign/slice-1-library`.
+Status: **draft; open questions 1–7 answered 2026-11-05 (see Decisions below); items under "Still open" need an answer before slice 2b is built.** Branch: `redesign/slice-1-library`.
 
 > **Version note:** the brief that asked for this plan said "the schemaVersion 3 migration step." That's stale — the slice-1 QA-fix pass already moved the schema from v2 to v5 (reps as text, tag normalization, position-numbered weeks). The day/slot migration below is **v5 → v6**.
 
@@ -78,12 +78,23 @@ Per-viewer only (never synced, same rule as `selectedPath`/`expanded` today): Ou
 - Replace-with-another-exercise merge — stays parked (slice 1's `ExerciseUsageDialog` already notes this).
 - A real load metric for the season strip (bars are a flat placeholder until one is defined).
 - Mobile master-detail layout for the grid (parking lot **V6**) — the grid gets the same responsive narrowing as the quick-view panel, nothing more.
-- Multiple sessions sharing one day/slot cell (see Open questions).
+- A dedicated multi-session cell design beyond stacking (see Decisions, item 3).
 
-## Open questions for Phil
+## Decisions (Phil, 2026-11-05)
 
-1. **"Current" block/week** — there's no plan start date in the data model, so "current" can only mean "first" by position in 2a. Do we add a plan-level start date (and from it, today-relative "current") in slice 2, or leave "current" meaning "first" for this slice and revisit?
-2. **Default placement on migration** — this plan proposes **everything becomes unscheduled** (`day: null, slot: null`) rather than guessing a day, specifically to avoid collisions (if every legacy session defaulted to, say, Monday/AM, they'd all pile into one cell). Confirm that's the right call, or would you rather see a different default (e.g. spread across weekdays in session order)?
-3. **One session per cell, or many?** The mockup's grid shows exactly one card per day/slot. Is a second session in the same cell a blocked action, or does it need to stack/scroll within the cell? This changes `SESSION_SCHEDULE_UPDATE`'s validation.
-4. **Empty "+" cells** — the mockup shows a `+` in every open cell. Does clicking it create a brand-new session pre-filled with that day/slot (today's "+ Add session" flow), open the "insert saved session" picker pre-filled with that day/slot, or offer both? This affects whether slice 2b or 2c owns that interaction.
-5. **Load bars** — confirmed placeholder (flat) for slice 2a per `design-decisions.md` §5. Is defining the actual metric (total sets? session RPE × duration?) in scope for a slice 2 follow-up, or staying parked indefinitely?
+1. **"Current" block follows a plan start date.** Every plan has a **mandatory start date**, set when the plan is created. If the start date is in the future, the first block is the one that loads and counts as current. Otherwise "current" is the first block that isn't fully in the past, computed from today's date. Slice 2a keeps "first block" until the start date exists (slice 2b).
+2. **Migration places nothing:** every existing session becomes unscheduled (`day: null, slot: null`). Confirmed.
+3. **Several sessions per cell are allowed, but it is the exception.** Design for one card per cell; when a second one lands in the same cell, stack them inside the cell (no blocking, no warning). `SESSION_SCHEDULE_UPDATE` does not reject occupied cells.
+4. **The "+" in an empty cell creates a new session** on that day and slot, with a default start time: **9:00 for AM, 15:00 for PM** (by slot index). The insert-saved-session picker is not offered from "+" for now.
+5. **Plan start date is mandatory** (see 1).
+6. **Inserting an exercise group copies it**, which is fine for individual plans. Linked groups and team plans are a future question (parking lot).
+7. **Load metric: session RPE × duration.** Defined on the definitions page (`docs/definitions.md`) so reviewers can read it and comment. The season strip stays a flat placeholder until the metric's data fields exist.
+
+## Still open (need an answer before building 2b)
+
+A. **Session start time is new data.** Decision 4 means sessions carry a start time (`startTime`, "HH:MM", null while unscheduled), added in the same v5 → v6 migration. Is the time editable by the coach (panel and full editor), and shown on the grid card, or only a default stored for later use?
+B. **The existing plan has no start date, and there is no "create plan" screen yet** (one shared plan; plan list is parked). What should happen to the live plan? Options: (a) migration sets `startDate: null` and the app shows a required "Set plan start date" prompt on first open; (b) you give me a date and the migration sets it. Also: must the start date be a Monday (the grid's columns are Mon–Sun), or should it snap to the Monday of that week?
+C. **Load needs planned RPE and planned duration per session.** Neither exists today. Add them as optional session fields in 2b/2c, or keep the load bars flat until a later slice? (Proposed fields are on the definitions page; nothing is built.)
+
+## Parked from this round
+- Team plans and linked exercise groups (decision 6): parking lot.
