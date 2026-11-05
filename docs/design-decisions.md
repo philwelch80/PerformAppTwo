@@ -75,7 +75,13 @@ Save as exercise group · Insert exercise group (search, pick, position) · Add 
 
 ## 9. Visual style
 
-Keep the current look (dark header, cool neutrals, teal accent) for now. A warmer take on the old PerformApp palette (amber, blue/green, slab-serif titles) was compared and not chosen. Styling is a later pass.
+**Decided 2026-11-05: match the mockups.** Teal accent `#0B6B5D`, Inter Tight, dark header (`#101418`), cool neutrals, light theme only. Images are in `docs/mockups/` (see its README). The amber/IBM Plex look the first build shipped with is replaced; the warmer old-PerformApp palette was compared earlier and not chosen.
+
+- **Dark mode:** dropped for the prototype (the mockups are light only). Remove the `prefers-color-scheme` block rather than leaving half of it styled.
+- **Numbers:** keep tabular numerals for sets, reps and load (Inter Tight's `font-variant-numeric: tabular-nums`; no second font needed).
+- **Session-type colors** (soft tint + dark text, always with a letter S/C/R, never color alone): strength `#DCEBE8` / `#0B4F44`, conditioning `#E3E8F6` / `#1F3A7A`, routines `#F3E6D8` / `#7A3E0F`.
+- **Phase and block bands use a neutral scale**, never the session-type tints (section 5 rule). The mockups' tinted phase bands break this rule and are wrong on that point; follow this rule, not the picture.
+- Accessibility rules in CLAUDE.md still win over the mockups (44 px targets, 4.5:1 text contrast: measure, don't assume).
 
 ## 10. Open items
 

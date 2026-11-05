@@ -63,4 +63,4 @@ A client that loads a row with a **newer** `schemaVersion` than it understands m
 
 ## Visual reference
 
-Mockup images are in `docs/mockups/`; use those — the canvas link is for humans. Screen mockups (Claude Design canvas): https://claude.ai/artifact/WiXuMtGB5zSoo7aHA5rSD8 — Library (exercises, exercise groups, sessions), plan builder (week table and weeks-as-rows grid), session builder, session quick-view panel, dialogs. Take layout, hierarchy and wording from it. Don't copy its markup, and don't treat its sample data as real. Styling is a later pass; until then the existing look is fine.
+Mockup images are in `docs/mockups/` (README maps each to its slice); use those. The canvas (https://claude.ai/artifact/WiXuMtGB5zSoo7aHA5rSD8) is for humans, Claude Code can't open it. Take layout, hierarchy, wording **and style** from them: teal accent, Inter Tight, dark header, light theme only (decided 2026-11-05, see `docs/design-decisions.md` section 9). Don't copy markup and don't treat sample data as real. Exception: phase and block bands use a neutral scale, not the session-type tints the mockups show.
