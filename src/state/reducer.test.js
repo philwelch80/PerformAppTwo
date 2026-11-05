@@ -283,6 +283,124 @@ describe('HYDRATE', () => {
   })
 })
 
+describe('SESSION_SCHEDULE_UPDATE', () => {
+  it('schedules a session and defaults its start time by slot (AM)', () => {
+    const state = initialState()
+    const path = pathToSession(state, 'Lower A')
+    const next = reducer(state, { type: 'SESSION_SCHEDULE_UPDATE', path, day: 0, slot: 0 })
+    const session = sessionByName(next, 'Lower A')
+    expect(session.day).toBe(0)
+    expect(session.slot).toBe(0)
+    expect(session.startTime).toBe('09:00')
+  })
+
+  it('defaults the start time to 15:00 for slot 1 (PM)', () => {
+    const state = initialState()
+    const path = pathToSession(state, 'Lower A')
+    const next = reducer(state, { type: 'SESSION_SCHEDULE_UPDATE', path, day: 2, slot: 1 })
+    expect(sessionByName(next, 'Lower A').startTime).toBe('15:00')
+  })
+
+  it('does not overwrite an existing start time when only day/slot change', () => {
+    const state = initialState()
+    const path = pathToSession(state, 'Lower A')
+    const scheduled = reducer(state, { type: 'SESSION_SCHEDULE_UPDATE', path, day: 0, slot: 0, startTime: '07:30' })
+    const moved = reducer(scheduled, { type: 'SESSION_SCHEDULE_UPDATE', path, day: 1, slot: 0 })
+    expect(sessionByName(moved, 'Lower A').startTime).toBe('07:30')
+  })
+
+  it('changing startTime alone never changes day or slot', () => {
+    const state = initialState()
+    const path = pathToSession(state, 'Lower A')
+    const scheduled = reducer(state, { type: 'SESSION_SCHEDULE_UPDATE', path, day: 3, slot: 1 })
+    const retimed = reducer(scheduled, { type: 'SESSION_SCHEDULE_UPDATE', path, startTime: '16:00' })
+    const session = sessionByName(retimed, 'Lower A')
+    expect(session.day).toBe(3)
+    expect(session.slot).toBe(1)
+    expect(session.startTime).toBe('16:00')
+  })
+
+  it('allows a second session into an already-occupied cell (extras stack)', () => {
+    const state = initialState()
+    const pathA = pathToSession(state, 'Lower A')
+    const pathB = pathToSession(state, 'Tempo Run')
+    const a = reducer(state, { type: 'SESSION_SCHEDULE_UPDATE', path: pathA, day: 0, slot: 0 })
+    const both = reducer(a, { type: 'SESSION_SCHEDULE_UPDATE', path: pathB, day: 0, slot: 0 })
+    expect(sessionByName(both, 'Lower A').day).toBe(0)
+    expect(sessionByName(both, 'Tempo Run').day).toBe(0)
+  })
+
+  it('clears startTime when a session is moved back to unscheduled', () => {
+    const state = initialState()
+    const path = pathToSession(state, 'Lower A')
+    const scheduled = reducer(state, { type: 'SESSION_SCHEDULE_UPDATE', path, day: 0, slot: 0 })
+    const unscheduled = reducer(scheduled, { type: 'SESSION_SCHEDULE_UPDATE', path, day: null, slot: null })
+    const session = sessionByName(unscheduled, 'Lower A')
+    expect(session.day).toBeNull()
+    expect(session.slot).toBeNull()
+    expect(session.startTime).toBeNull()
+  })
+})
+
+describe('SESSION_ADD with day/slot (the grid\'s "+" cell)', () => {
+  it('creates a scheduled session with the slot default start time', () => {
+    const state = initialState()
+    const week = state.plan.phases[0].subphases[0].blocks[0].weeks[0]
+    const ids = { phaseId: state.plan.phases[0].id, subId: state.plan.phases[0].subphases[0].id, blockId: state.plan.phases[0].subphases[0].blocks[0].id, weekId: week.id }
+    const next = reducer(state, { type: 'SESSION_ADD', ...ids, day: 4, slot: 1 })
+    const added = next.plan.phases[0].subphases[0].blocks[0].weeks[0].sessions.find((s) => s.name === 'New Session')
+    expect(added.day).toBe(4)
+    expect(added.slot).toBe(1)
+    expect(added.startTime).toBe('15:00')
+    expect(next.selectedPath.sessionId).toBe(added.id)
+  })
+
+  it('creates an unscheduled session when no day/slot is given', () => {
+    const state = initialState()
+    const week = state.plan.phases[0].subphases[0].blocks[0].weeks[0]
+    const ids = { phaseId: state.plan.phases[0].id, subId: state.plan.phases[0].subphases[0].id, blockId: state.plan.phases[0].subphases[0].blocks[0].id, weekId: week.id }
+    const next = reducer(state, { type: 'SESSION_ADD', ...ids })
+    const added = next.plan.phases[0].subphases[0].blocks[0].weeks[0].sessions.find((s) => s.name === 'New Session')
+    expect(added.day).toBeNull()
+    expect(added.slot).toBeNull()
+    expect(added.startTime).toBeNull()
+  })
+})
+
+describe('SESSION_PLANNED_UPDATE', () => {
+  it('sets plannedRpe and plannedMinutes on a session', () => {
+    const state = initialState()
+    const path = pathToSession(state, 'Lower A')
+    const withRpe = reducer(state, { type: 'SESSION_PLANNED_UPDATE', path, field: 'plannedRpe', value: 7 })
+    const withBoth = reducer(withRpe, { type: 'SESSION_PLANNED_UPDATE', path, field: 'plannedMinutes', value: 60 })
+    const session = sessionByName(withBoth, 'Lower A')
+    expect(session.plannedRpe).toBe(7)
+    expect(session.plannedMinutes).toBe(60)
+  })
+
+  it('can clear a field back to null', () => {
+    const state = initialState()
+    const path = pathToSession(state, 'Lower A')
+    const set = reducer(state, { type: 'SESSION_PLANNED_UPDATE', path, field: 'plannedRpe', value: 7 })
+    const cleared = reducer(set, { type: 'SESSION_PLANNED_UPDATE', path, field: 'plannedRpe', value: null })
+    expect(sessionByName(cleared, 'Lower A').plannedRpe).toBeNull()
+  })
+})
+
+describe('PLAN_START_DATE_UPDATE', () => {
+  it('snaps a mid-week date to that week\'s Monday', () => {
+    const state = initialState()
+    const next = reducer(state, { type: 'PLAN_START_DATE_UPDATE', date: '2026-11-12' }) // Thursday
+    expect(next.plan.startDate).toBe('2026-11-09')
+  })
+
+  it('leaves a Monday unchanged', () => {
+    const state = initialState()
+    const next = reducer(state, { type: 'PLAN_START_DATE_UPDATE', date: '2026-12-07' })
+    expect(next.plan.startDate).toBe('2026-12-07')
+  })
+})
+
 describe('editing a saved session template directly (path.savedSessionId)', () => {
   it('renames and edits a saved session template in place, without touching the plan', () => {
     const state = initialState()

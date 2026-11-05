@@ -121,7 +121,7 @@ describe('migrate v1 -> v2', () => {
   it('sets schemaVersion to CURRENT_VERSION', () => {
     const result = migrate(v1Fixture())
     expect(result.schemaVersion).toBe(CURRENT_VERSION)
-    expect(CURRENT_VERSION).toBe(5)
+    expect(CURRENT_VERSION).toBe(6)
   })
 
   it('stringifies reps (v1 -> v3 goes through v2 on the way)', () => {
@@ -149,7 +149,7 @@ describe('migrate v1 -> v2', () => {
   })
 
   it('leaves a newer-than-supported state unchanged and flags it', () => {
-    const fromTheFuture = { schemaVersion: 6, plan: { phases: [] }, exercises: [], savedSessions: [], exerciseGroups: [] }
+    const fromTheFuture = { schemaVersion: 7, plan: { phases: [] }, exercises: [], savedSessions: [], exerciseGroups: [] }
     expect(isNewerThanSupported(fromTheFuture)).toBe(true)
     expect(migrate(fromTheFuture)).toEqual(fromTheFuture)
   })
@@ -306,7 +306,7 @@ describe('migrate v4 -> v5', () => {
   it('drops the stored week name', () => {
     const result = migrate(v4Fixture())
     result.plan.phases[0].subphases[0].blocks[0].weeks.forEach((week) => expect(week.name).toBeUndefined())
-    expect(result.schemaVersion).toBe(5)
+    expect(result.schemaVersion).toBe(CURRENT_VERSION) // migrate always runs through to the latest version
   })
 
   it('is idempotent', () => {
@@ -320,5 +320,89 @@ describe('migrate v4 -> v5', () => {
     const snapshot = JSON.parse(JSON.stringify(fixture))
     migrate(fixture)
     expect(fixture).toEqual(snapshot)
+  })
+})
+
+describe('migrate v5 -> v6', () => {
+  function v5Fixture() {
+    return {
+      schemaVersion: 5,
+      exercises: [],
+      savedSessions: [],
+      exerciseGroups: [],
+      plan: {
+        name: 'Plan',
+        phases: [
+          {
+            id: 'phase_1',
+            name: 'Off-Season',
+            subphases: [
+              {
+                id: 'sub_1',
+                name: 'General Prep',
+                blocks: [
+                  {
+                    id: 'block_1',
+                    name: 'Block 1',
+                    weeks: [
+                      {
+                        id: 'week_1',
+                        focus: '',
+                        sessions: [
+                          { id: 'sess_1', name: 'Lower A', type: 'strength', data: { groups: [] } },
+                          { id: 'sess_2', name: 'Tempo Run', type: 'conditioning', data: {} },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    }
+  }
+
+  it('gives the plan a Monday start date and the default day slots', () => {
+    const result = migrate(v5Fixture())
+    expect(result.plan.startDate).toBe('2026-11-09')
+    expect(result.plan.daySlots).toEqual(['AM', 'PM'])
+  })
+
+  it('puts every existing session into the unscheduled state', () => {
+    const result = migrate(v5Fixture())
+    result.plan.phases[0].subphases[0].blocks[0].weeks[0].sessions.forEach((session) => {
+      expect(session.day).toBeNull()
+      expect(session.slot).toBeNull()
+      expect(session.startTime).toBeNull()
+      expect(session.plannedRpe).toBeNull()
+      expect(session.plannedMinutes).toBeNull()
+    })
+  })
+
+  it('sets schemaVersion to 6', () => {
+    const result = migrate(v5Fixture())
+    expect(result.schemaVersion).toBe(6)
+    expect(CURRENT_VERSION).toBe(6)
+  })
+
+  it('is idempotent', () => {
+    const once = migrate(v5Fixture())
+    const twice = migrate(once)
+    expect(twice).toEqual(once)
+  })
+
+  it('does not mutate its input', () => {
+    const fixture = v5Fixture()
+    const snapshot = JSON.parse(JSON.stringify(fixture))
+    migrate(fixture)
+    expect(fixture).toEqual(snapshot)
+  })
+
+  it('leaves a newer-than-supported state (v7) unchanged and flags it', () => {
+    const fromTheFuture = { schemaVersion: 7, plan: { phases: [] }, exercises: [], savedSessions: [], exerciseGroups: [] }
+    expect(isNewerThanSupported(fromTheFuture)).toBe(true)
+    expect(migrate(fromTheFuture)).toEqual(fromTheFuture)
   })
 })

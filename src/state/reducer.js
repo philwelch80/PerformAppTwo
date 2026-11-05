@@ -3,6 +3,7 @@ import { uid } from '../lib/id'
 import { emptySessionData } from '../lib/taxonomy'
 import { expandedFromPlan } from '../lib/seed'
 import { isExerciseInUse } from '../lib/exercises'
+import { defaultStartTimeForSlot, mondayOf } from '../lib/schedule'
 import {
   getPhase,
   getSub,
@@ -104,6 +105,10 @@ export function reducer(state, action) {
         draft.plan.name = action.name
         break
       }
+      case 'PLAN_START_DATE_UPDATE': {
+        draft.plan.startDate = mondayOf(action.date)
+        break
+      }
       case 'PHASE_ADD': {
         const phase = { id: uid('phase'), name: 'New Phase', subphases: [] }
         draft.plan.phases.push(phase)
@@ -148,7 +153,19 @@ export function reducer(state, action) {
       case 'SESSION_ADD': {
         const week = getWeek(getBlock(getSub(getPhase(draft.plan, action.phaseId), action.subId), action.blockId), action.weekId)
         const name = action.name?.trim() || 'New Session'
-        const session = { id: uid('sess'), name, type: 'strength', data: emptySessionData('strength') }
+        const day = action.day ?? null
+        const slot = action.slot ?? null
+        const session = {
+          id: uid('sess'),
+          name,
+          type: 'strength',
+          data: emptySessionData('strength'),
+          day,
+          slot,
+          startTime: day != null && slot != null ? defaultStartTimeForSlot(slot) : null,
+          plannedRpe: null,
+          plannedMinutes: null,
+        }
         week.sessions.push(session)
         draft.selectedPath = { phaseId: action.phaseId, subId: action.subId, blockId: action.blockId, weekId: action.weekId, sessionId: session.id }
         break
@@ -157,7 +174,17 @@ export function reducer(state, action) {
         const week = getWeek(getBlock(getSub(getPhase(draft.plan, action.phaseId), action.subId), action.blockId), action.weekId)
         const saved = draft.savedSessions.find((s) => s.id === action.savedSessionId)
         if (!saved) break
-        const session = { id: uid('sess'), name: saved.name, type: saved.type, data: JSON.parse(JSON.stringify(saved.data)) }
+        const session = {
+          id: uid('sess'),
+          name: saved.name,
+          type: saved.type,
+          data: JSON.parse(JSON.stringify(saved.data)),
+          day: null,
+          slot: null,
+          startTime: null,
+          plannedRpe: null,
+          plannedMinutes: null,
+        }
         if (session.data.groups) session.data.groups.forEach((g) => { g.id = uid('grp') })
         week.sessions.push(session)
         draft.selectedPath = {
@@ -210,6 +237,31 @@ export function reducer(state, action) {
           session.type = action.sessionType
           session.data = emptySessionData(action.sessionType)
         }
+        break
+      }
+      // Occupied cells are allowed (several sessions can share a day/slot —
+      // decision 3); this never rejects. Becoming unscheduled (both day and
+      // slot null) clears startTime too. Otherwise, an explicit startTime is
+      // honored as-is; changing it never moves the session to another slot.
+      // A session newly scheduled with no startTime yet gets the slot's
+      // default (decision 4/8).
+      case 'SESSION_SCHEDULE_UPDATE': {
+        const session = sessionAt(draft, action.path)
+        if (!session) break
+        if ('day' in action) session.day = action.day
+        if ('slot' in action) session.slot = action.slot
+        if (session.day == null && session.slot == null) {
+          session.startTime = null
+        } else if ('startTime' in action) {
+          session.startTime = action.startTime
+        } else if (session.startTime == null) {
+          session.startTime = defaultStartTimeForSlot(session.slot)
+        }
+        break
+      }
+      case 'SESSION_PLANNED_UPDATE': {
+        const session = sessionAt(draft, action.path)
+        if (session) session[action.field] = action.value
         break
       }
 

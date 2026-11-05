@@ -9,7 +9,11 @@ import { normalizeTag } from './exercises'
 // that only differed by case (V14).
 // v4 -> v5: a week's stored `name` is dropped — its display name is always
 // derived from position ("Week N"); a custom label goes in `focus` (V8).
-export const CURRENT_VERSION = 5
+// v5 -> v6: plan gains `startDate` (a Monday) and `daySlots`; every session
+// in the plan gains `day`, `slot`, `startTime`, `plannedRpe`, `plannedMinutes`
+// (all null — everything starts unscheduled). See docs/slice-2-plan.md
+// decisions 2, 9, 10.
+export const CURRENT_VERSION = 6
 
 export function isNewerThanSupported(sharedState) {
   return (sharedState?.schemaVersion || 1) > CURRENT_VERSION
@@ -97,6 +101,22 @@ function v4ToV5(state) {
     ),
   )
 
+  state.schemaVersion = 5
+  return state
+}
+
+function v5ToV6(state) {
+  state.plan.startDate = '2026-11-09'
+  state.plan.daySlots = ['AM', 'PM']
+
+  walkPlanSessions(state.plan, (session) => {
+    session.day = null
+    session.slot = null
+    session.startTime = null
+    session.plannedRpe = null
+    session.plannedMinutes = null
+  })
+
   state.schemaVersion = CURRENT_VERSION
   return state
 }
@@ -113,5 +133,6 @@ export function migrate(sharedState) {
   if (state.schemaVersion < 3) state = v2ToV3(state)
   if (state.schemaVersion < 4) state = v3ToV4(state)
   if (state.schemaVersion < 5) state = v4ToV5(state)
+  if (state.schemaVersion < 6) state = v5ToV6(state)
   return state
 }
