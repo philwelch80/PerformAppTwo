@@ -34,7 +34,13 @@ describe('exerciseUsage', () => {
   it('returns all zeros for an exercise that is not referenced anywhere', () => {
     const { state, carryId } = stateWithGroupsAndSessions()
     const usage = exerciseUsage(state, carryId)
-    expect(usage).toEqual({ groupCount: 0, groupNames: [], sessionCount: 0, savedSessionCount: 0, total: 0 })
+    expect(usage).toEqual({ groupCount: 0, groupNames: [], sessionCount: 0, savedSessionCount: 0, sessionNames: [], total: 0 })
+  })
+
+  it('names the first few plan and saved sessions that use the exercise', () => {
+    const { state, squatId } = stateWithGroupsAndSessions()
+    const usage = exerciseUsage(state, squatId)
+    expect(usage.sessionNames).toEqual(['Lower A', 'Saved Lower'])
   })
 
   it('caps groupNames at the first three groups', () => {

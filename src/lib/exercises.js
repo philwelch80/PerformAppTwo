@@ -10,19 +10,21 @@ function sessionUsesExercise(session, exerciseId) {
 }
 
 // Pure, read-only count of everywhere an exercise is referenced, for the
-// archive/delete dialog. groupNames is capped for display ("3 exercise
-// groups, 12 sessions — Warm-Up, Upper Pull, ...").
+// archive/delete dialog. groupNames/sessionNames are capped for display
+// ("3 exercise groups (Warm-Up, ...), 12 sessions (Lower A, ...)").
 export function exerciseUsage(state, exerciseId) {
   const groups = state.exerciseGroups.filter((group) => groupUsesExercise(group, exerciseId))
-  const sessionCount = allSessions(state.plan).filter((session) => sessionUsesExercise(session, exerciseId)).length
-  const savedSessionCount = state.savedSessions.filter((session) => sessionUsesExercise(session, exerciseId)).length
+  const planSessions = allSessions(state.plan).filter((session) => sessionUsesExercise(session, exerciseId))
+  const savedSessions = state.savedSessions.filter((session) => sessionUsesExercise(session, exerciseId))
+  const sessionNames = [...planSessions, ...savedSessions].slice(0, 3).map((session) => session.name)
 
   return {
     groupCount: groups.length,
     groupNames: groups.slice(0, 3).map((group) => group.name),
-    sessionCount,
-    savedSessionCount,
-    total: groups.length + sessionCount + savedSessionCount,
+    sessionCount: planSessions.length,
+    savedSessionCount: savedSessions.length,
+    sessionNames,
+    total: groups.length + planSessions.length + savedSessions.length,
   }
 }
 
