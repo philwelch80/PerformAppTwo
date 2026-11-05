@@ -9,14 +9,14 @@ const TABS = [
 ]
 
 export default function App() {
-  const { state, ready, syncError, tooNew } = useStore()
+  const { ready, syncError, tooNew } = useStore()
   const [activeTab, setActiveTab] = useState('library')
   const [resetting, setResetting] = useState(false)
 
-  const counts = {
-    library: state.exercises.filter((e) => !e.archived).length,
-    plan: null,
-  }
+  // No badge count here: the number would only ever reflect active
+  // exercises, not the whole library (groups, sessions too), which reads
+  // as a confusing partial count.
+  const counts = { library: null, plan: null }
 
   const devBanner = ROW_ID !== 'singleton' && <div className="dev-banner">Dev data: {ROW_ID} — not the live plan</div>
 

@@ -54,7 +54,7 @@ export default function ExerciseGroupsTab() {
         </div>
 
         <div className="sidebar-group">
-          <div className="subtle-label">Tags</div>
+          <div className="subtle-label">Filters</div>
           <TagFilterPills counts={counts} active={filter.tag} onSelect={(tag) => setFilter({ ...filter, tag: tag || '' })} />
         </div>
 

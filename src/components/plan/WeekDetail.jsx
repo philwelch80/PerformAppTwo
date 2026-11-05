@@ -74,7 +74,11 @@ export default function WeekDetail({ path, week }) {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
           <button
             className="btn btn-sm"
-            onClick={() => dispatch({ type: 'SESSION_ADD', phaseId: path.phaseId, subId: path.subId, blockId: path.blockId, weekId: week.id })}
+            onClick={() => {
+              const name = window.prompt('Name this session', 'New Session')
+              if (name === null) return
+              dispatch({ type: 'SESSION_ADD', phaseId: path.phaseId, subId: path.subId, blockId: path.blockId, weekId: week.id, name })
+            }}
           >
             + Add session
           </button>

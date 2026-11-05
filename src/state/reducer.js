@@ -148,9 +148,10 @@ export function reducer(state, action) {
       }
       case 'SESSION_ADD': {
         const week = getWeek(getBlock(getSub(getPhase(draft.plan, action.phaseId), action.subId), action.blockId), action.weekId)
-        const session = { id: uid('sess'), name: 'New Session', type: 'strength', data: emptySessionData('strength') }
+        const name = action.name?.trim() || 'New Session'
+        const session = { id: uid('sess'), name, type: 'strength', data: emptySessionData('strength') }
         week.sessions.push(session)
-        draft.selectedPath = { ...action, sessionId: session.id }
+        draft.selectedPath = { phaseId: action.phaseId, subId: action.subId, blockId: action.blockId, weekId: action.weekId, sessionId: session.id }
         break
       }
       case 'SAVED_SESSION_INSERT': {

@@ -6,8 +6,22 @@ import { sessionTypeInfo } from '../../lib/taxonomy'
 const KIND_LABEL = { phase: 'Phase', sub: 'Subphase', block: 'Block', week: 'Week', session: 'Session' }
 const HAS_CHILDREN = { phase: true, sub: true, block: true, week: true, session: false }
 
-function isSelected(selectedPath, idKey, id) {
-  return !!selectedPath && selectedPath[idKey] === id
+// A row is the actual selection only once nothing deeper is also named in
+// the path; otherwise it's just on the path to the selection, and gets a
+// subtler style so the real target stays the only one that reads as
+// "selected".
+function isLeafSelected(selectedPath, idKey, id, deeperKey) {
+  if (!selectedPath || selectedPath[idKey] !== id) return false
+  return !deeperKey || !selectedPath[deeperKey]
+}
+function isAncestorSelected(selectedPath, idKey, id, deeperKey) {
+  if (!selectedPath || selectedPath[idKey] !== id) return false
+  return !!(deeperKey && selectedPath[deeperKey])
+}
+function rowClass(selectedPath, idKey, id, deeperKey) {
+  if (isLeafSelected(selectedPath, idKey, id, deeperKey)) return ' selected'
+  if (isAncestorSelected(selectedPath, idKey, id, deeperKey)) return ' ancestor-selected'
+  return ''
 }
 
 export default function PlanTree() {
@@ -100,7 +114,7 @@ export default function PlanTree() {
           const pExpanded = !!expanded[phase.id]
           return (
             <li className="tree-node" key={phase.id}>
-              <div className={`tree-row${isSelected(selectedPath, 'phaseId', phase.id) ? ' selected' : ''}`}>
+              <div className={`tree-row${rowClass(selectedPath, 'phaseId', phase.id, 'subId')}`}>
                 <button
                   className="disclosure"
                   aria-label={`${pExpanded ? 'Collapse' : 'Expand'} ${phase.name}`}
@@ -131,7 +145,7 @@ export default function PlanTree() {
                     const sExpanded = !!expanded[sub.id]
                     return (
                       <div className="tree-node" key={sub.id}>
-                        <div className={`tree-row${isSelected(selectedPath, 'subId', sub.id) ? ' selected' : ''}`}>
+                        <div className={`tree-row${rowClass(selectedPath, 'subId', sub.id, 'blockId')}`}>
                           <button
                             className="disclosure"
                             aria-label={`${sExpanded ? 'Collapse' : 'Expand'} ${sub.name}`}
@@ -162,7 +176,7 @@ export default function PlanTree() {
                               const bExpanded = !!expanded[block.id]
                               return (
                                 <div className="tree-node" key={block.id}>
-                                  <div className={`tree-row${isSelected(selectedPath, 'blockId', block.id) ? ' selected' : ''}`}>
+                                  <div className={`tree-row${rowClass(selectedPath, 'blockId', block.id, 'weekId')}`}>
                                     <button
                                       className="disclosure"
                                       aria-label={`${bExpanded ? 'Collapse' : 'Expand'} ${block.name}`}
@@ -211,7 +225,7 @@ export default function PlanTree() {
                                             onDragOver={(e) => e.preventDefault()}
                                             onDrop={(e) => { e.preventDefault(); onWeekDrop(ids, week.id) }}
                                           >
-                                            <div className={`tree-row${isSelected(selectedPath, 'weekId', week.id) ? ' selected' : ''}`}>
+                                            <div className={`tree-row${rowClass(selectedPath, 'weekId', week.id, 'sessionId')}`}>
                                               <span className="drag-handle" title="Drag to reorder within this block">⋮⋮</span>
                                               <button
                                                 className="disclosure"
@@ -300,7 +314,7 @@ export default function PlanTree() {
                                                       onDragOver={(e) => e.preventDefault()}
                                                       onDrop={(e) => { e.preventDefault(); onSessionDrop({ ...ids, weekId: week.id }, session.id) }}
                                                     >
-                                                      <div className={`tree-row${isSelected(selectedPath, 'sessionId', session.id) ? ' selected' : ''}`}>
+                                                      <div className={`tree-row${rowClass(selectedPath, 'sessionId', session.id)}`}>
                                                         <span className="drag-handle" title="Drag to reorder within this week">⋮⋮</span>
                                                         <button
                                                           type="button"
@@ -324,7 +338,15 @@ export default function PlanTree() {
                                                   )
                                                 })}
                                                 <div className="tree-add-row">
-                                                  <button onClick={() => dispatch({ type: 'SESSION_ADD', ...ids, weekId: week.id })}>+ Add session</button>
+                                                  <button
+                                                    onClick={() => {
+                                                      const name = window.prompt('Name this session', 'New Session')
+                                                      if (name === null) return
+                                                      dispatch({ type: 'SESSION_ADD', ...ids, weekId: week.id, name })
+                                                    }}
+                                                  >
+                                                    + Add session
+                                                  </button>
                                                 </div>
                                               </div>
                                             )}

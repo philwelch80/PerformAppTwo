@@ -164,6 +164,26 @@ describe('EXERCISE_GROUP_UPDATE / DUPLICATE / ITEM_*', () => {
   })
 })
 
+describe('SESSION_ADD', () => {
+  it('uses the given name, trimmed', () => {
+    const state = initialState()
+    const week = state.plan.phases[0].subphases[0].blocks[0].weeks[0]
+    const path = { phaseId: state.plan.phases[0].id, subId: state.plan.phases[0].subphases[0].id, blockId: state.plan.phases[0].subphases[0].blocks[0].id, weekId: week.id }
+    const next = reducer(state, { type: 'SESSION_ADD', ...path, name: '  Deadlift Day  ' })
+    const added = next.plan.phases[0].subphases[0].blocks[0].weeks[0].sessions.at(-1)
+    expect(added.name).toBe('Deadlift Day')
+    expect(next.selectedPath).toEqual({ ...path, sessionId: added.id })
+  })
+
+  it('falls back to "New Session" when no name is given', () => {
+    const state = initialState()
+    const week = state.plan.phases[0].subphases[0].blocks[0].weeks[0]
+    const path = { phaseId: state.plan.phases[0].id, subId: state.plan.phases[0].subphases[0].id, blockId: state.plan.phases[0].subphases[0].blocks[0].id, weekId: week.id }
+    const next = reducer(state, { type: 'SESSION_ADD', ...path })
+    expect(next.plan.phases[0].subphases[0].blocks[0].weeks[0].sessions.at(-1).name).toBe('New Session')
+  })
+})
+
 describe('HYDRATE', () => {
   it('keeps a selection and its expand state when the selected node still exists', () => {
     const state = initialState()

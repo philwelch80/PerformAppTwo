@@ -240,6 +240,7 @@ label { display: block; font-size: 12px; font-weight: 500; color: var(--ink-soft
 .tree-row:hover { background: var(--surface-sunken); }
 .tree-row.selected { background: var(--accent-soft); color: var(--accent-ink); }
 .tree-row.selected .tree-label { color: var(--accent-ink); }
+.tree-row.ancestor-selected { background: var(--surface-sunken); box-shadow: inset 2px 0 0 var(--accent); }
 .disclosure { width: 14px; flex: none; text-align: center; color: var(--steel); font-size: 10px; background: none; border: none; cursor: pointer; padding: 0; position: relative; }
 /* Icon-only controls: enlarge the tap/click target with an invisible
    overlay rather than growing the visible row/button itself. A smaller
