@@ -225,8 +225,47 @@ label { display: block; font-size: 12px; font-weight: 500; color: var(--ink-soft
 .empty-state { color: var(--steel); font-size: 13px; padding: 24px; text-align: center; border: 1px dashed var(--line-strong); border-radius: var(--radius-m); }
 
 /* ---------- plan layout ---------- */
+.plan-view-toggle { margin-bottom: 14px; }
+
 .plan-layout { display: grid; grid-template-columns: 340px 1fr; gap: 16px; align-items: start; }
 @media (max-width: 760px) { .plan-layout { grid-template-columns: 1fr; } }
+
+/* ---------- plan overview (grid) ---------- */
+.plan-overview { display: flex; flex-direction: column; gap: 16px; }
+
+.season-strip-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+.season-strip-bars { display: flex; gap: 3px; }
+.season-bar {
+  flex: 1; min-width: 6px; height: 28px; background: var(--line-strong); border: none; border-radius: 3px;
+  cursor: pointer; padding: 0;
+}
+.season-bar:hover { background: var(--steel); }
+.season-strip-numbers { display: flex; gap: 3px; margin-top: 4px; }
+.season-strip-number { flex: 1; min-width: 6px; text-align: center; font-size: 10px; color: var(--steel); }
+.season-strip-phases { display: flex; gap: 3px; margin-top: 6px; }
+.season-strip-phase {
+  background: var(--surface-sunken); color: var(--ink-soft); font-size: 11.5px; font-weight: 600;
+  padding: 4px 8px; border-radius: var(--radius-s); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.block-grid { display: flex; flex-direction: column; gap: 10px; }
+.block-grid-section { overflow: hidden; }
+.block-grid-header {
+  width: 100%; display: flex; align-items: center; gap: 10px; background: none; border: none; cursor: pointer;
+  padding: 12px 16px; text-align: left; font: inherit; color: inherit;
+}
+.block-grid-header:hover { background: var(--surface-sunken); }
+.block-grid-title { font-weight: 600; }
+.block-grid-context { color: var(--steel); font-size: 12.5px; }
+.block-grid-meta { margin-left: auto; color: var(--steel); font-size: 12.5px; }
+.block-grid-rows { border-top: 1px solid var(--line); }
+.block-grid-row { display: grid; grid-template-columns: 160px 1fr; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); align-items: start; }
+.block-grid-row:last-child { border-bottom: none; }
+.block-grid-week-name { font-weight: 600; font-size: 13px; }
+.block-grid-sessions-cell { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+@media (max-width: 560px) {
+  .block-grid-row { grid-template-columns: 1fr; gap: 4px; }
+}
 
 .tree-panel { padding: 10px; max-height: none; }
 .tree-head { display: flex; justify-content: space-between; align-items: center; padding: 6px 6px 10px; }
