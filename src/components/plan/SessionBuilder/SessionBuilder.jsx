@@ -3,8 +3,7 @@ import { useToast } from '../../../state/ToastContext.jsx'
 import { useConfirm } from '../../../state/ConfirmContext.jsx'
 import { usePrompt } from '../../../state/PromptContext.jsx'
 import { SESSION_TYPES } from '../../../lib/taxonomy'
-import { DAY_NAMES } from '../../../lib/schedule'
-import OptionalIntegerInput from '../../common/OptionalIntegerInput.jsx'
+import ScheduleFields from '../ScheduleFields.jsx'
 import StrengthEditor from './StrengthEditor.jsx'
 import ConditioningEditor from './ConditioningEditor.jsx'
 import MobilityEditor from './MobilityEditor.jsx'
@@ -16,18 +15,10 @@ function hasContent(session) {
 }
 
 export default function SessionBuilder({ path, session, onDelete, hideSaveAsTemplate }) {
-  const { state, dispatch } = useStore()
+  const { dispatch } = useStore()
   const toast = useToast()
   const confirm = useConfirm()
   const prompt = usePrompt()
-  const daySlots = state.plan.daySlots
-
-  function updateSchedule(fields) {
-    dispatch({ type: 'SESSION_SCHEDULE_UPDATE', path, ...fields })
-  }
-  function updatePlanned(field, value) {
-    dispatch({ type: 'SESSION_PLANNED_UPDATE', path, field, value })
-  }
 
   async function setType(nextType) {
     if (nextType === session.type) return
@@ -94,76 +85,7 @@ export default function SessionBuilder({ path, session, onDelete, hideSaveAsTemp
         {!path.savedSessionId && (
           <>
             <div className="subtle-label">Schedule</div>
-            <div className="field-row schedule-fields">
-              <div className="field">
-                <label htmlFor="sched-day">Day</label>
-                <select
-                  id="sched-day"
-                  value={session.day ?? ''}
-                  onChange={(e) => {
-                    const v = e.target.value
-                    if (v === '') updateSchedule({ day: null, slot: null })
-                    else updateSchedule({ day: Number(v), slot: session.slot ?? 0 })
-                  }}
-                >
-                  <option value="">Unscheduled</option>
-                  {DAY_NAMES.map((name, i) => (
-                    <option key={name} value={i}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="field">
-                <label htmlFor="sched-slot">Slot</label>
-                <select
-                  id="sched-slot"
-                  value={session.slot ?? ''}
-                  disabled={session.day == null}
-                  onChange={(e) => updateSchedule({ day: session.day ?? 0, slot: Number(e.target.value) })}
-                >
-                  {daySlots.map((label, i) => (
-                    <option key={label} value={i}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="field">
-                <label htmlFor="sched-time">Start time</label>
-                <input
-                  id="sched-time"
-                  type="time"
-                  value={session.startTime || ''}
-                  disabled={session.day == null}
-                  onChange={(e) => updateSchedule({ startTime: e.target.value || null })}
-                />
-              </div>
-            </div>
-            <div className="field-row schedule-fields">
-              <div className="field">
-                <label htmlFor="sched-rpe">Planned RPE</label>
-                <OptionalIntegerInput
-                  ariaLabel="Planned RPE"
-                  placeholder="1–10"
-                  min={1}
-                  max={10}
-                  value={session.plannedRpe}
-                  onCommit={(v) => updatePlanned('plannedRpe', v)}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="sched-minutes">Planned minutes</label>
-                <OptionalIntegerInput
-                  ariaLabel="Planned minutes"
-                  placeholder="e.g. 60"
-                  min={1}
-                  max={999}
-                  value={session.plannedMinutes}
-                  onCommit={(v) => updatePlanned('plannedMinutes', v)}
-                />
-              </div>
-            </div>
+            <ScheduleFields path={path} session={session} idPrefix="sess-sched" />
             <hr className="divider" />
           </>
         )}

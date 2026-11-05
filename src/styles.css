@@ -220,12 +220,15 @@ label { display: block; font-size: var(--fs-s); font-weight: var(--fw-medium); c
 .block-grid-title { font-weight: var(--fw-semibold); }
 .block-grid-context { color: var(--text-muted); font-size: var(--fs-s); }
 .block-grid-meta { margin-left: auto; color: var(--text-muted); font-size: var(--fs-s); }
-.block-grid-rows { border-top: 1px solid var(--line); overflow-x: auto; }
+.block-grid-rows { border-top: 1px solid var(--line); }
 
 /* Day/slot grid: a fixed-width week label column, then 7 day columns. A
  * minimum width forces horizontal scroll on narrow screens rather than
  * squeezing seven columns illegible (the mobile master-detail redesign for
- * this grid is parking lot V6, out of scope here). */
+ * this grid is parking lot V6, out of scope here). The header row and every
+ * block's rows share one scroll container so they never scroll out of sync,
+ * and so the min-width is contained here instead of widening the page. */
+.grid-scroll-area { overflow-x: auto; }
 .week-grid-head, .week-grid-row { display: grid; grid-template-columns: 140px repeat(7, minmax(88px, 1fr)); gap: 8px; min-width: 780px; }
 .week-grid-head { padding: 0 16px 6px; }
 .week-grid-head-day { font-size: var(--fs-xs); font-weight: var(--fw-bold); letter-spacing: var(--tracking-label); color: var(--text-muted); text-align: center; }
@@ -274,6 +277,49 @@ label { display: block; font-size: var(--fs-s); font-weight: var(--fw-medium); c
   display: flex; flex-direction: column; gap: 5px; padding: 8px;
 }
 .session-chip-menu select { min-height: 32px; font-size: 12px; }
+.session-chip-selected { outline: var(--selected-outline); outline-offset: 1px; }
+
+/* ---------- quick-view panel (slice 2c) ---------- */
+.plan-overview-layout { display: flex; gap: 20px; align-items: flex-start; }
+.plan-overview-layout .plan-overview { flex: 1; min-width: 0; }
+.quick-view-backdrop { display: none; }
+
+.quick-view-panel {
+  width: var(--panel-width); flex: none; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+  position: sticky; top: 20px; max-height: calc(100vh - 40px); overflow-y: auto;
+}
+.qvp-head { display: flex; justify-content: space-between; align-items: flex-start; }
+.qvp-close { font-size: 20px; line-height: 1; padding: 4px 8px; color: var(--text-muted); }
+.qvp-title-input { font-size: var(--fs-2xl); letter-spacing: var(--tracking-title); padding: 2px 0; }
+
+.qvp-group { border: 1px solid var(--line); border-radius: var(--radius-m); padding: 10px; background: var(--surface-sunken); }
+.qvp-group + .qvp-group { margin-top: 10px; }
+.qvp-group-superset { border-color: var(--accent); background: var(--accent-soft); }
+.qvp-group-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+.qvp-group-label { font-weight: var(--fw-semibold); }
+.qvp-group-type { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
+.qvp-rotation { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line-strong); font-size: var(--fs-s); color: var(--text-soft); }
+
+.qvp-readonly { margin: 0; }
+.qvp-readonly dt { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text-muted); font-weight: var(--fw-bold); margin-top: 8px; }
+.qvp-readonly dt:first-child { margin-top: 0; }
+.qvp-readonly dd { margin: 2px 0 0; }
+.qvp-readonly-list { margin: 0; padding-left: 18px; }
+.qvp-readonly-list li { margin-bottom: 4px; }
+
+.qvp-actions { margin-top: auto; padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.qvp-actions-row { display: flex; gap: 8px; }
+.qvp-actions-row .btn { flex: 1; }
+
+@media (max-width: 1000px) {
+  .quick-view-backdrop {
+    display: block; position: fixed; inset: 0; background: rgba(16, 20, 24, 0.4); z-index: 29;
+  }
+  .quick-view-panel {
+    position: fixed; top: 0; right: 0; bottom: 0; height: 100%; max-height: none; width: 100%; max-width: var(--panel-width);
+    z-index: 30; border-radius: 0; box-shadow: -8px 0 24px rgba(0, 0, 0, 0.16);
+  }
+}
 
 .block-grid-legend { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 2px 4px; }
 .legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-s); color: var(--text-muted); }

@@ -1,6 +1,6 @@
 # Slice 2 — Plan overview (season strip, block grid, quick-view panel)
 
-Status: **Slice 2a and 2b done (grid shell; day/slot data model, v5→v6 migration, real grid with drag + "Move to..." menu, current-block default, season-strip load bars). Decisions 1–10 below are all built. Stopped for approval before slice 2c (quick-view panel).** Branch: `redesign/slice-1-library`.
+Status: **Slices 2a, 2b and 2c all done** (grid shell; day/slot data model, v5→v6 migration, real grid with drag + "Move to..." menu, current-block default, season-strip load bars; 420px quick-view panel with quick edits, Open full editor, Duplicate, Save as template, Delete). Decisions 1–10 below are all built. Branch: `redesign/slice-1-library`.
 
 > **Version note:** the brief that asked for this plan said "the schemaVersion 3 migration step." That's stale — the slice-1 QA-fix pass already moved the schema from v2 to v5 (reps as text, tag normalization, position-numbered weeks). The day/slot migration below is **v5 → v6**.
 
@@ -66,6 +66,12 @@ Adds real placement so the grid's columns mean something.
 - A quick edit in the panel and the same field in the full editor stay in sync (same dispatch, same store).
 - Deleting a session from the panel closes the panel and removes it from the grid.
 - `npm run lint` and `npm run build` pass.
+
+### Implementation notes (2026-11-05)
+- Panel-open state reuses `selectedPath` rather than a second parallel piece of state — it was already per-viewer and never synced (see "State" below), so there's nothing extra to keep in sync. Clicking a chip (and the grid's "+") both just select the session; the panel is whatever `selectedPath` currently names.
+- The superset rotation line is shown with full exercise names ("Bench Press 1 → Single-Arm DB Row 1 → ...") rather than the mockup's hand-picked abbreviations ("Bench 1 → Row 1 → ...") — there's no reliable rule to shorten an arbitrary exercise name.
+- Conditioning and Routines bodies show their existing fields (modality/pacing/description/target; the routine's ordered steps) read-only, using only fields that already existed in the data model — no conditioning-specific fields were added.
+- Day/slot/start-time/plannedRpe/plannedMinutes editing is a shared `ScheduleFields` component, used by both the panel and the full `SessionBuilder` — one dispatch path for both, per the "same dispatch, same store" acceptance check.
 
 ## State (shared vs per-viewer)
 

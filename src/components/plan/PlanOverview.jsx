@@ -3,6 +3,7 @@ import { useStore } from '../../state/StoreContext.jsx'
 import { weekName } from '../../lib/planTree'
 import { SESSION_TYPES, sessionTypeInfo } from '../../lib/taxonomy'
 import { DAY_ABBR, DAY_NAMES, currentBlockIndex, todayISO, weekLoad } from '../../lib/schedule'
+import QuickViewPanel from './QuickViewPanel.jsx'
 
 // Flattens the plan into weeks in order, each carrying its ancestors — the
 // season strip and block grid both need this same linear view the tree
@@ -62,7 +63,7 @@ function formatTime(hhmm) {
 // (parking lot S2 — drag itself still needs a manual test pass). Manages
 // its own outside-click-closes-menu handling so it works the same whether
 // it's rendered in a grid cell or the unscheduled area.
-function SessionChip({ session, daySlots, menuOpen, onOpenMenu, onCloseMenu, onOpenSession, onSchedule, onDragStart }) {
+function SessionChip({ session, daySlots, selected, menuOpen, onOpenMenu, onCloseMenu, onOpenSession, onSchedule, onDragStart }) {
   const t = sessionTypeInfo(session.type)
   const rootRef = useRef(null)
 
@@ -83,7 +84,7 @@ function SessionChip({ session, daySlots, menuOpen, onOpenMenu, onCloseMenu, onO
   }, [menuOpen, onCloseMenu])
 
   return (
-    <div className={`session-chip type-${session.type}`} draggable onDragStart={onDragStart} ref={rootRef}>
+    <div className={`session-chip type-${session.type}${selected ? ' session-chip-selected' : ''}`} draggable onDragStart={onDragStart} ref={rootRef}>
       <button type="button" className="session-chip-main" onClick={onOpenSession}>
         <span className="type-badge-letter">{t.letter}</span>
         <span className="session-chip-name">{session.name}</span>
@@ -144,11 +145,10 @@ function SessionChip({ session, daySlots, menuOpen, onOpenMenu, onCloseMenu, onO
   )
 }
 
-// `onOpenSession(path)` selects a session and switches to Outline (the only
-// editor surface until slice 2c's quick-view panel exists).
-// `onSwitchToOutline()` switches to Outline without changing the selection —
-// used right after SESSION_ADD, which already selects the new session.
-export default function PlanOverview({ onOpenSession, onSwitchToOutline }) {
+// `onSwitchToOutline()` switches to Outline without changing the selection
+// — used by the quick-view panel's "Open full editor" (selectedPath is
+// already pointing at the right session).
+export default function PlanOverview({ onSwitchToOutline }) {
   const { state, dispatch } = useStore()
   const { plan, selectedPath } = state
   const daySlots = plan.daySlots
@@ -163,6 +163,12 @@ export default function PlanOverview({ onOpenSession, onSwitchToOutline }) {
   const [openMenuFor, setOpenMenuFor] = useState(null)
   const dragCtx = useRef(null)
 
+  // The quick-view panel's target: whichever session selectedPath names, if
+  // it still exists (panel-open state is itself just selectedPath, which is
+  // already per-viewer and never synced — see CLAUDE.md's "State" section).
+  const panelRow = selectedPath?.sessionId ? weekRows.find((r) => r.week.id === selectedPath.weekId) : null
+  const panelSession = panelRow?.week.sessions.find((s) => s.id === selectedPath.sessionId) || null
+
   function isCollapsed(blockId, index) {
     if (blockId in collapsedOverrides) return collapsedOverrides[blockId]
     return index !== currentIdx
@@ -175,7 +181,11 @@ export default function PlanOverview({ onOpenSession, onSwitchToOutline }) {
   }
   function openSession(ids, weekId, session) {
     setOpenMenuFor(null)
-    onOpenSession?.({ ...ids, weekId, sessionId: session.id })
+    dispatch({ type: 'SELECT', path: { ...ids, weekId, sessionId: session.id } })
+    jumpToWeek(weekId)
+  }
+  function closePanel() {
+    dispatch({ type: 'SELECT', path: null })
   }
   function scheduleSession(ids, weekId, sessionId, fields) {
     dispatch({ type: 'SESSION_SCHEDULE_UPDATE', path: { ...ids, weekId, sessionId }, ...fields })
@@ -183,7 +193,7 @@ export default function PlanOverview({ onOpenSession, onSwitchToOutline }) {
   }
   function addSession(ids, weekId, day, slot) {
     dispatch({ type: 'SESSION_ADD', ...ids, weekId, day, slot })
-    onSwitchToOutline?.()
+    jumpToWeek(weekId)
   }
 
   // Weeks belonging to a currently-open block light up in the season strip —
@@ -206,6 +216,7 @@ export default function PlanOverview({ onOpenSession, onSwitchToOutline }) {
   }
 
   return (
+    <div className={`plan-overview-layout${panelSession ? ' has-panel' : ''}`}>
     <div className="plan-overview">
       <div className="panel panel-pad season-strip">
         <div className="season-strip-head">
@@ -257,6 +268,7 @@ export default function PlanOverview({ onOpenSession, onSwitchToOutline }) {
         </div>
       </div>
 
+      <div className="grid-scroll-area">
       <div className="week-grid-head">
         <span />
         {DAY_ABBR.map((d) => (
@@ -296,7 +308,7 @@ export default function PlanOverview({ onOpenSession, onSwitchToOutline }) {
                     const unscheduled = w.week.sessions.filter((s) => s.day == null || s.slot == null)
                     return (
                       <div
-                        className={`week-grid-row${selectedPath?.weekId === w.week.id ? ' selected' : ''}`}
+                        className={`week-grid-row${selectedPath?.weekId === w.week.id && !selectedPath.sessionId ? ' selected' : ''}`}
                         id={`overview-week-${w.week.id}`}
                         key={w.week.id}
                       >
@@ -328,6 +340,7 @@ export default function PlanOverview({ onOpenSession, onSwitchToOutline }) {
                                       key={session.id}
                                       session={session}
                                       daySlots={daySlots}
+                                      selected={selectedPath?.sessionId === session.id}
                                       menuOpen={openMenuFor === session.id}
                                       onOpenMenu={() => setOpenMenuFor(session.id)}
                                       onCloseMenu={() => setOpenMenuFor(null)}
@@ -376,6 +389,7 @@ export default function PlanOverview({ onOpenSession, onSwitchToOutline }) {
                                   key={session.id}
                                   session={session}
                                   daySlots={daySlots}
+                                  selected={selectedPath?.sessionId === session.id}
                                   menuOpen={openMenuFor === session.id}
                                   onOpenMenu={() => setOpenMenuFor(session.id)}
                                   onCloseMenu={() => setOpenMenuFor(null)}
@@ -398,6 +412,7 @@ export default function PlanOverview({ onOpenSession, onSwitchToOutline }) {
           )
         })}
       </div>
+      </div>
 
       <div className="block-grid-legend">
         {SESSION_TYPES.map((t) => (
@@ -407,6 +422,18 @@ export default function PlanOverview({ onOpenSession, onSwitchToOutline }) {
           </span>
         ))}
       </div>
+    </div>
+
+    {panelSession && (
+      <QuickViewPanel
+        path={selectedPath}
+        session={panelSession}
+        weekLabel={weekName(panelRow.block, panelRow.week)}
+        blockName={panelRow.block.name}
+        onClose={closePanel}
+        onOpenFullEditor={onSwitchToOutline}
+      />
+    )}
     </div>
   )
 }

@@ -58,13 +58,7 @@ export default function PlanBuilder() {
           <PlanDetail />
         </div>
       ) : (
-        <PlanOverview
-          onOpenSession={(path) => {
-            dispatch({ type: 'SELECT', path })
-            setView('outline')
-          }}
-          onSwitchToOutline={() => setView('outline')}
-        />
+        <PlanOverview onSwitchToOutline={() => setView('outline')} />
       )}
     </div>
   )
