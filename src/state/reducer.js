@@ -233,7 +233,7 @@ export function reducer(state, action) {
       case 'GROUP_ITEM_ADD': {
         const session = sessionAt(draft, action.path)
         const group = session.data.groups.find((g) => g.id === action.groupId)
-        group.items.push({ exerciseId: action.exerciseId, sets: 3, reps: 10, startingWeight: '' })
+        group.items.push({ exerciseId: action.exerciseId, sets: 3, reps: '10', startingWeight: '' })
         break
       }
       case 'GROUP_ITEM_UPDATE': {
@@ -290,7 +290,7 @@ export function reducer(state, action) {
       }
       case 'EXERCISE_GROUP_ITEM_ADD': {
         const group = draft.exerciseGroups.find((g) => g.id === action.id)
-        group.items.push({ exerciseId: action.exerciseId, sets: 3, reps: 10, startingWeight: '' })
+        group.items.push({ exerciseId: action.exerciseId, sets: 3, reps: '10', startingWeight: '' })
         break
       }
       case 'EXERCISE_GROUP_ITEM_UPDATE': {

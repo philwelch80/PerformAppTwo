@@ -274,13 +274,16 @@ label { display: block; font-size: 12px; font-weight: 500; color: var(--ink-soft
 .group-head input[type=text] { max-width: 200px; background: transparent; border-color: transparent; font-weight: 600; padding: 3px 5px; }
 .group-head input[type=text]:hover, .group-head input[type=text]:focus { background: var(--surface); border-color: var(--line-strong); }
 
-.ex-row { display: grid; grid-template-columns: 1fr 64px 64px 84px auto; gap: 8px; align-items: center; padding: 6px 4px; border-radius: var(--radius-s); }
+.ex-row { display: grid; grid-template-columns: 1fr 56px 88px 84px auto; gap: 8px; align-items: center; padding: 6px 4px; border-radius: var(--radius-s); }
 .ex-row:hover { background: var(--surface); }
 .ex-row-head { font-size: 11px; color: var(--steel); text-transform: uppercase; letter-spacing: 0.03em; padding: 0 4px; }
 .ex-row input { padding: 5px 6px; text-align: center; }
 .ex-row .ex-row-name { text-align: left; font-weight: 500; }
+.sets-input-wrap { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.input-error { border-color: var(--danger) !important; }
+.field-error { font-size: 10.5px; color: var(--danger); line-height: 1; }
 @media (max-width: 560px) {
-  .ex-row, .ex-row-head { grid-template-columns: 1fr 44px 44px 60px auto; font-size: 12.5px; }
+  .ex-row, .ex-row-head { grid-template-columns: 1fr 44px 72px 60px auto; font-size: 12.5px; }
 }
 
 .routine-item { display: flex; gap: 8px; align-items: center; padding: 6px 4px; border-radius: var(--radius-s); }

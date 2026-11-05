@@ -3,6 +3,7 @@ import { useStore } from '../../state/StoreContext.jsx'
 import { allTagNames } from '../../lib/exercises'
 import TagPicker from './TagPicker.jsx'
 import ExercisePicker from '../plan/SessionBuilder/ExercisePicker.jsx'
+import SetsInput from '../common/SetsInput.jsx'
 
 export default function ExerciseGroupModal({ groupId, onClose }) {
   const { state, dispatch } = useStore()
@@ -74,17 +75,16 @@ export default function ExerciseGroupModal({ groupId, onClose }) {
                         </span>
                       )}
                     </span>
-                    <input
-                      type="number"
-                      min="0"
+                    <SetsInput
                       value={item.sets}
-                      onChange={(e) => dispatch({ type: 'EXERCISE_GROUP_ITEM_UPDATE', id: group.id, itemIndex: index, field: 'sets', value: Number(e.target.value) })}
+                      onCommit={(sets) => dispatch({ type: 'EXERCISE_GROUP_ITEM_UPDATE', id: group.id, itemIndex: index, field: 'sets', value: sets })}
                     />
                     <input
-                      type="number"
-                      min="0"
+                      type="text"
+                      aria-label="Reps"
+                      placeholder="8, 8-10, AMRAP…"
                       value={item.reps}
-                      onChange={(e) => dispatch({ type: 'EXERCISE_GROUP_ITEM_UPDATE', id: group.id, itemIndex: index, field: 'reps', value: Number(e.target.value) })}
+                      onChange={(e) => dispatch({ type: 'EXERCISE_GROUP_ITEM_UPDATE', id: group.id, itemIndex: index, field: 'reps', value: e.target.value })}
                     />
                     <input
                       type="text"

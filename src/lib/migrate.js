@@ -1,7 +1,9 @@
 // v1 (no schemaVersion) -> v2: mobility -> routines, sessionBlocks ->
 // exerciseGroups (+ tags, isSuperset), groups get isSuperset, exercises get
 // archived. See docs/slice-1-plan.md step 1 for the full table.
-export const CURRENT_VERSION = 2
+// v2 -> v3: reps becomes free text ("8", "8-10", "AMRAP", "5/3/1") instead
+// of a coerced number (V3).
+export const CURRENT_VERSION = 3
 
 export function isNewerThanSupported(sharedState) {
   return (sharedState?.schemaVersion || 1) > CURRENT_VERSION
@@ -43,6 +45,25 @@ function v1ToV2(state) {
   }))
   delete state.sessionBlocks
 
+  state.schemaVersion = 2
+  return state
+}
+
+function stringifyReps(items) {
+  items.forEach((item) => {
+    if (typeof item.reps !== 'string') item.reps = String(item.reps)
+  })
+}
+
+function v2ToV3(state) {
+  state.exerciseGroups.forEach((group) => stringifyReps(group.items))
+  walkPlanSessions(state.plan, (session) => {
+    if (session.data?.groups) session.data.groups.forEach((group) => stringifyReps(group.items))
+  })
+  state.savedSessions.forEach((session) => {
+    if (session.data?.groups) session.data.groups.forEach((group) => stringifyReps(group.items))
+  })
+
   state.schemaVersion = CURRENT_VERSION
   return state
 }
@@ -54,7 +75,8 @@ export function migrate(sharedState) {
   const version = sharedState?.schemaVersion || 1
   if (version > CURRENT_VERSION) return sharedState
 
-  const state = structuredClone(sharedState)
-  if (version < 2) return v1ToV2(state)
+  let state = structuredClone(sharedState)
+  if (version < 2) state = v1ToV2(state)
+  if (state.schemaVersion < 3) state = v2ToV3(state)
   return state
 }
