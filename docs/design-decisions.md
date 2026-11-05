@@ -109,5 +109,7 @@ Decisions made while fixing slice-1 QA findings, not yet reflected above.
 - **Several sessions can share a day/slot cell** (the exception, so stack them). The "+" in an empty cell creates a new session with a default start time: 9:00 for AM, 15:00 for PM.
 - **Existing sessions migrate to unscheduled** (`day: null, slot: null`).
 - **Exercise groups are inserted as copies**, fine for individual plans; team plans and linked groups are a future question.
-- **Load metric is session RPE × duration**, defined in `docs/definitions.md`. The season strip stays a flat placeholder until planned RPE and duration exist on sessions.
-- Open: start time editable or not, how the live plan gets its start date, planned RPE/duration fields (see `slice-2-plan.md`, "Still open").
+- **Load metric is session RPE × duration**, defined in `docs/definitions.md`. Sessions get optional `plannedRpe` and `plannedMinutes`; load bars use them (slice 2).
+- **Session start time** (`startTime`) is editable and shown on the grid card.
+- **The live plan gets a `startDate` in the v5 → v6 migration, always a Monday** (proposed 2026-11-09, editable afterwards). New plans must ask for one, snapped to a Monday.
+- Details: `slice-2-plan.md`, decisions 8–10.

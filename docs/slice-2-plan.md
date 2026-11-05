@@ -76,7 +76,7 @@ Per-viewer only (never synced, same rule as `selectedPath`/`expanded` today): Ou
 
 - Configurable day slots (more than AM/PM, custom names/order) — stays parked.
 - Replace-with-another-exercise merge — stays parked (slice 1's `ExerciseUsageDialog` already notes this).
-- A real load metric for the season strip (bars are a flat placeholder until one is defined).
+- Load-bar polish beyond the metric in `docs/definitions.md` (no per-exercise load, no tonnage).
 - Mobile master-detail layout for the grid (parking lot **V6**) — the grid gets the same responsive narrowing as the quick-view panel, nothing more.
 - A dedicated multi-session cell design beyond stacking (see Decisions, item 3).
 
@@ -90,11 +90,13 @@ Per-viewer only (never synced, same rule as `selectedPath`/`expanded` today): Ou
 6. **Inserting an exercise group copies it**, which is fine for individual plans. Linked groups and team plans are a future question (parking lot).
 7. **Load metric: session RPE × duration.** Defined on the definitions page (`docs/definitions.md`) so reviewers can read it and comment. The season strip stays a flat placeholder until the metric's data fields exist.
 
-## Still open (need an answer before building 2b)
+## More decisions (Phil, 2026-11-05, second round)
 
-A. **Session start time is new data.** Decision 4 means sessions carry a start time (`startTime`, "HH:MM", null while unscheduled), added in the same v5 → v6 migration. Is the time editable by the coach (panel and full editor), and shown on the grid card, or only a default stored for later use?
-B. **The existing plan has no start date, and there is no "create plan" screen yet** (one shared plan; plan list is parked). What should happen to the live plan? Options: (a) migration sets `startDate: null` and the app shows a required "Set plan start date" prompt on first open; (b) you give me a date and the migration sets it. Also: must the start date be a Monday (the grid's columns are Mon–Sun), or should it snap to the Monday of that week?
-C. **Load needs planned RPE and planned duration per session.** Neither exists today. Add them as optional session fields in 2b/2c, or keep the load bars flat until a later slice? (Proposed fields are on the definitions page; nothing is built.)
+8. **Session start time is editable and shown.** `startTime` ("HH:MM", null while unscheduled) appears on the grid card and can be changed in the quick-view panel and the full editor. Slot still decides which cell a session sits in; changing the time does not move it to another slot.
+9. **The live plan gets its start date in the migration, and it is a Monday.** The v5 → v6 step sets `plan.startDate` (ISO date, always a Monday). Proposed value: **Monday 2026-11-09** (the next Monday), editable afterwards in a plan settings control. Any new plan created later must ask for a start date, snapped to the Monday of the date chosen. The grid's columns are Mon–Sun, so week 1 always starts on a Monday.
+10. **Planned RPE and planned duration are added now** as optional session fields: `plannedRpe` (1–10, or null) and `plannedMinutes` (whole minutes, or null), included in the same v5 → v6 migration (both null for existing sessions). They are editable in the quick-view panel and the full editor. The season strip's load bars use them as defined in `docs/definitions.md` (week load = sum of RPE × minutes; sessions missing either count 0 and the week shows a "load incomplete" mark). Bars stay flat only for weeks where no session has both fields.
+
+Migration summary (v5 → v6): `plan.startDate` (Monday), `plan.daySlots = ['AM','PM']`, and on every session `day`, `slot`, `startTime`, `plannedRpe`, `plannedMinutes` all null. One migration, one test fixture against a copy of the live row on `dev`; never `singleton`.
 
 ## Parked from this round
 - Team plans and linked exercise groups (decision 6): parking lot.
