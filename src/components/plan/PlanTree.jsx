@@ -1,20 +1,57 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../../state/StoreContext.jsx'
 import { useToast } from '../../state/ToastContext.jsx'
+import { useConfirm } from '../../state/ConfirmContext.jsx'
+import { usePrompt } from '../../state/PromptContext.jsx'
 import { sessionTypeInfo } from '../../lib/taxonomy'
+import { weekName } from '../../lib/planTree'
 
 const KIND_LABEL = { phase: 'Phase', sub: 'Subphase', block: 'Block', week: 'Week', session: 'Session' }
 const HAS_CHILDREN = { phase: true, sub: true, block: true, week: true, session: false }
 
-function isSelected(selectedPath, idKey, id) {
-  return !!selectedPath && selectedPath[idKey] === id
+// A row is the actual selection only once nothing deeper is also named in
+// the path; otherwise it's just on the path to the selection, and gets a
+// subtler style so the real target stays the only one that reads as
+// "selected".
+function isLeafSelected(selectedPath, idKey, id, deeperKey) {
+  if (!selectedPath || selectedPath[idKey] !== id) return false
+  return !deeperKey || !selectedPath[deeperKey]
+}
+function isAncestorSelected(selectedPath, idKey, id, deeperKey) {
+  if (!selectedPath || selectedPath[idKey] !== id) return false
+  return !!(deeperKey && selectedPath[deeperKey])
+}
+function rowClass(selectedPath, idKey, id, deeperKey) {
+  if (isLeafSelected(selectedPath, idKey, id, deeperKey)) return ' selected'
+  if (isAncestorSelected(selectedPath, idKey, id, deeperKey)) return ' ancestor-selected'
+  return ''
 }
 
 export default function PlanTree() {
   const { state, dispatch } = useStore()
   const toast = useToast()
+  const confirm = useConfirm()
+  const prompt = usePrompt()
   const dragCtx = useRef(null)
   const { plan, expanded, selectedPath } = state
+  const [openWeekMenu, setOpenWeekMenu] = useState(null)
+  const weekMenuRef = useRef(null)
+
+  useEffect(() => {
+    if (!openWeekMenu) return
+    function onDocMouseDown(e) {
+      if (weekMenuRef.current && !weekMenuRef.current.contains(e.target)) setOpenWeekMenu(null)
+    }
+    function onKeyDown(e) {
+      if (e.key === 'Escape') setOpenWeekMenu(null)
+    }
+    document.addEventListener('mousedown', onDocMouseDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onDocMouseDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [openWeekMenu])
 
   function select(path) {
     dispatch({ type: 'SELECT', path })
@@ -22,13 +59,14 @@ export default function PlanTree() {
   function toggle(id) {
     dispatch({ type: 'TOGGLE_EXPAND', id })
   }
-  function rename(kind, parts, currentName) {
-    const next = window.prompt(`Rename ${KIND_LABEL[kind].toLowerCase()}`, currentName)
-    if (next !== null && next.trim()) dispatch({ type: 'NODE_RENAME', kind, parts, name: next.trim() })
+  async function rename(kind, parts, currentName) {
+    const next = await prompt({ title: `Rename ${KIND_LABEL[kind].toLowerCase()}`, label: 'Name', defaultValue: currentName })
+    if (next) dispatch({ type: 'NODE_RENAME', kind, parts, name: next })
   }
-  function remove(kind, parts) {
-    if (HAS_CHILDREN[kind] && !window.confirm(`Delete this ${KIND_LABEL[kind].toLowerCase()}? This also removes everything inside it.`)) {
-      return
+  async function remove(kind, parts, { title, description } = {}) {
+    if (HAS_CHILDREN[kind]) {
+      const ok = await confirm({ title: title || `Delete this ${KIND_LABEL[kind].toLowerCase()}?`, description })
+      if (!ok) return
     }
     dispatch({ type: 'NODE_DELETE', kind, parts })
     toast(`${KIND_LABEL[kind]} deleted`)
@@ -68,36 +106,38 @@ export default function PlanTree() {
 
   return (
     <div className="panel tree-panel">
-      <div className="tree-head">
-        <input
-          type="text"
-          className="plan-title-input"
-          value={plan.name}
-          onChange={(e) => dispatch({ type: 'PLAN_RENAME', name: e.target.value })}
-        />
-      </div>
-
       <ul className="tree tree-level-plan">
         {plan.phases.map((phase) => {
           const pExpanded = !!expanded[phase.id]
           return (
             <li className="tree-node" key={phase.id}>
-              <div
-                className={`tree-row${isSelected(selectedPath, 'phaseId', phase.id) ? ' selected' : ''}`}
-                onClick={() => select({ phaseId: phase.id })}
-              >
-                <button className="disclosure" onClick={(e) => { e.stopPropagation(); toggle(phase.id) }}>
+              <div className={`tree-row${rowClass(selectedPath, 'phaseId', phase.id, 'subId')}`}>
+                <button
+                  className="disclosure"
+                  aria-label={`${pExpanded ? 'Collapse' : 'Expand'} ${phase.name}`}
+                  aria-expanded={pExpanded}
+                  onClick={(e) => { e.stopPropagation(); toggle(phase.id) }}
+                >
                   {pExpanded ? '▼' : '▶'}
                 </button>
-                <span className="tree-label">
-                  {phase.name}
-                  <span className="tree-sub">Phase</span>
-                </span>
+                <button type="button" className="tree-row-select" onClick={() => select({ phaseId: phase.id })}>
+                  <span className="tree-label">
+                    {phase.name}
+                    <span className="tree-sub">Phase</span>
+                  </span>
+                </button>
                 <span className="tree-row-actions">
                   <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); rename('phase', [phase.id], phase.name) }}>
                     Rename
                   </button>
-                  <button className="btn btn-ghost btn-sm btn-danger-text" onClick={(e) => { e.stopPropagation(); remove('phase', [phase.id]) }}>
+                  <button
+                    className="btn btn-ghost btn-sm btn-danger-text"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      const n = phase.subphases.length
+                      remove('phase', [phase.id], { title: `Delete "${phase.name}"?`, description: `This removes ${n} subphase${n === 1 ? '' : 's'}.` })
+                    }}
+                  >
                     Delete
                   </button>
                 </span>
@@ -109,22 +149,33 @@ export default function PlanTree() {
                     const sExpanded = !!expanded[sub.id]
                     return (
                       <div className="tree-node" key={sub.id}>
-                        <div
-                          className={`tree-row${isSelected(selectedPath, 'subId', sub.id) ? ' selected' : ''}`}
-                          onClick={() => select({ phaseId: phase.id, subId: sub.id })}
-                        >
-                          <button className="disclosure" onClick={(e) => { e.stopPropagation(); toggle(sub.id) }}>
+                        <div className={`tree-row${rowClass(selectedPath, 'subId', sub.id, 'blockId')}`}>
+                          <button
+                            className="disclosure"
+                            aria-label={`${sExpanded ? 'Collapse' : 'Expand'} ${sub.name}`}
+                            aria-expanded={sExpanded}
+                            onClick={(e) => { e.stopPropagation(); toggle(sub.id) }}
+                          >
                             {sExpanded ? '▼' : '▶'}
                           </button>
-                          <span className="tree-label">
-                            {sub.name}
-                            <span className="tree-sub">Subphase</span>
-                          </span>
+                          <button type="button" className="tree-row-select" onClick={() => select({ phaseId: phase.id, subId: sub.id })}>
+                            <span className="tree-label">
+                              {sub.name}
+                              <span className="tree-sub">Subphase</span>
+                            </span>
+                          </button>
                           <span className="tree-row-actions">
                             <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); rename('sub', [phase.id, sub.id], sub.name) }}>
                               Rename
                             </button>
-                            <button className="btn btn-ghost btn-sm btn-danger-text" onClick={(e) => { e.stopPropagation(); remove('sub', [phase.id, sub.id]) }}>
+                            <button
+                              className="btn btn-ghost btn-sm btn-danger-text"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                const n = sub.blocks.length
+                                remove('sub', [phase.id, sub.id], { title: `Delete "${sub.name}"?`, description: `This removes ${n} block${n === 1 ? '' : 's'}.` })
+                              }}
+                            >
                               Delete
                             </button>
                           </span>
@@ -136,17 +187,25 @@ export default function PlanTree() {
                               const bExpanded = !!expanded[block.id]
                               return (
                                 <div className="tree-node" key={block.id}>
-                                  <div
-                                    className={`tree-row${isSelected(selectedPath, 'blockId', block.id) ? ' selected' : ''}`}
-                                    onClick={() => select({ phaseId: phase.id, subId: sub.id, blockId: block.id })}
-                                  >
-                                    <button className="disclosure" onClick={(e) => { e.stopPropagation(); toggle(block.id) }}>
+                                  <div className={`tree-row${rowClass(selectedPath, 'blockId', block.id, 'weekId')}`}>
+                                    <button
+                                      className="disclosure"
+                                      aria-label={`${bExpanded ? 'Collapse' : 'Expand'} ${block.name}`}
+                                      aria-expanded={bExpanded}
+                                      onClick={(e) => { e.stopPropagation(); toggle(block.id) }}
+                                    >
                                       {bExpanded ? '▼' : '▶'}
                                     </button>
-                                    <span className="tree-label">
-                                      {block.name}
-                                      <span className="tree-sub">Block</span>
-                                    </span>
+                                    <button
+                                      type="button"
+                                      className="tree-row-select"
+                                      onClick={() => select({ phaseId: phase.id, subId: sub.id, blockId: block.id })}
+                                    >
+                                      <span className="tree-label">
+                                        {block.name}
+                                        <span className="tree-sub">Block</span>
+                                      </span>
+                                    </button>
                                     <span className="tree-row-actions">
                                       <button
                                         className="btn btn-ghost btn-sm"
@@ -156,7 +215,11 @@ export default function PlanTree() {
                                       </button>
                                       <button
                                         className="btn btn-ghost btn-sm btn-danger-text"
-                                        onClick={(e) => { e.stopPropagation(); remove('block', [phase.id, sub.id, block.id]) }}
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          const n = block.weeks.length
+                                          remove('block', [phase.id, sub.id, block.id], { title: `Delete "${block.name}"?`, description: `This removes ${n} week${n === 1 ? '' : 's'}.` })
+                                        }}
                                       >
                                         Delete
                                       </button>
@@ -168,6 +231,7 @@ export default function PlanTree() {
                                       {block.weeks.map((week) => {
                                         const wExpanded = !!expanded[week.id]
                                         const ids = { phaseId: phase.id, subId: sub.id, blockId: block.id }
+                                        const label = weekName(block, week)
                                         return (
                                           <div
                                             className="tree-node"
@@ -177,34 +241,72 @@ export default function PlanTree() {
                                             onDragOver={(e) => e.preventDefault()}
                                             onDrop={(e) => { e.preventDefault(); onWeekDrop(ids, week.id) }}
                                           >
-                                            <div
-                                              className={`tree-row${isSelected(selectedPath, 'weekId', week.id) ? ' selected' : ''}`}
-                                              onClick={() => select({ ...ids, weekId: week.id })}
-                                            >
+                                            <div className={`tree-row${rowClass(selectedPath, 'weekId', week.id, 'sessionId')}`}>
                                               <span className="drag-handle" title="Drag to reorder within this block">⋮⋮</span>
-                                              <button className="disclosure" onClick={(e) => { e.stopPropagation(); toggle(week.id) }}>
+                                              <button
+                                                className="disclosure"
+                                                aria-label={`${wExpanded ? 'Collapse' : 'Expand'} ${label}`}
+                                                aria-expanded={wExpanded}
+                                                onClick={(e) => { e.stopPropagation(); toggle(week.id) }}
+                                              >
                                                 {wExpanded ? '▼' : '▶'}
                                               </button>
-                                              <span className="tree-label">
-                                                {week.name}
-                                                <span className="tree-sub">{week.focus || ''}</span>
-                                              </span>
-                                              <span className="tree-row-actions">
+                                              <button
+                                                type="button"
+                                                className="tree-row-select"
+                                                onClick={() => select({ ...ids, weekId: week.id })}
+                                                title={week.focus || undefined}
+                                              >
+                                                <span className="tree-label">
+                                                  {label}
+                                                  <span className="tree-sub">{week.focus || ''}</span>
+                                                </span>
+                                              </button>
+                                              <span
+                                                className="tree-row-actions"
+                                                ref={openWeekMenu === week.id ? weekMenuRef : null}
+                                                style={openWeekMenu === week.id ? { display: 'flex' } : undefined}
+                                              >
                                                 <button
-                                                  className="btn btn-ghost btn-sm"
-                                                  onClick={(e) => { e.stopPropagation(); dispatch({ type: 'WEEK_COPY', ...ids, weekId: week.id }); toast('Week duplicated into the next slot') }}
+                                                  className="btn btn-ghost btn-sm kebab-btn"
+                                                  aria-label={`${label} actions`}
+                                                  aria-haspopup="true"
+                                                  aria-expanded={openWeekMenu === week.id}
+                                                  onClick={(e) => { e.stopPropagation(); setOpenWeekMenu(openWeekMenu === week.id ? null : week.id) }}
                                                 >
-                                                  Copy
+                                                  ⋮
                                                 </button>
-                                                <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); rename('week', [phase.id, sub.id, block.id, week.id], week.name) }}>
-                                                  Rename
-                                                </button>
-                                                <button
-                                                  className="btn btn-ghost btn-sm btn-danger-text"
-                                                  onClick={(e) => { e.stopPropagation(); remove('week', [phase.id, sub.id, block.id, week.id]) }}
-                                                >
-                                                  Delete
-                                                </button>
+                                                {openWeekMenu === week.id && (
+                                                  <div className="row-menu" role="menu">
+                                                    <button
+                                                      role="menuitem"
+                                                      className="row-menu-item"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setOpenWeekMenu(null)
+                                                        dispatch({ type: 'WEEK_COPY', ...ids, weekId: week.id })
+                                                        toast('Week duplicated into the next slot')
+                                                      }}
+                                                    >
+                                                      Copy
+                                                    </button>
+                                                    <button
+                                                      role="menuitem"
+                                                      className="row-menu-item row-menu-item-danger"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setOpenWeekMenu(null)
+                                                        const n = week.sessions.length
+                                                        remove('week', [phase.id, sub.id, block.id, week.id], {
+                                                          title: `Delete ${label}?`,
+                                                          description: `This removes ${n} session${n === 1 ? '' : 's'}.`,
+                                                        })
+                                                      }}
+                                                    >
+                                                      Delete
+                                                    </button>
+                                                  </div>
+                                                )}
                                               </span>
                                             </div>
 
@@ -221,13 +323,17 @@ export default function PlanTree() {
                                                       onDragOver={(e) => e.preventDefault()}
                                                       onDrop={(e) => { e.preventDefault(); onSessionDrop({ ...ids, weekId: week.id }, session.id) }}
                                                     >
-                                                      <div
-                                                        className={`tree-row${isSelected(selectedPath, 'sessionId', session.id) ? ' selected' : ''}`}
-                                                        onClick={() => select({ ...ids, weekId: week.id, sessionId: session.id })}
-                                                      >
+                                                      <div className={`tree-row${rowClass(selectedPath, 'sessionId', session.id)}`}>
                                                         <span className="drag-handle" title="Drag to reorder within this week">⋮⋮</span>
-                                                        <span className={`session-type-dot ${typeInfo.dot}`} />
-                                                        <span className="tree-label">{session.name}</span>
+                                                        <button
+                                                          type="button"
+                                                          className="tree-row-select"
+                                                          onClick={() => select({ ...ids, weekId: week.id, sessionId: session.id })}
+                                                        >
+                                                          <span className={`session-type-dot ${typeInfo.dot}`} />
+                                                          <span className="session-type-letter">{typeInfo.letter}</span>
+                                                          <span className="tree-label">{session.name}</span>
+                                                        </button>
                                                         <span className="tree-row-actions">
                                                           <button
                                                             className="btn btn-ghost btn-sm btn-danger-text"
@@ -241,7 +347,15 @@ export default function PlanTree() {
                                                   )
                                                 })}
                                                 <div className="tree-add-row">
-                                                  <button onClick={() => dispatch({ type: 'SESSION_ADD', ...ids, weekId: week.id })}>+ Add session</button>
+                                                  <button
+                                                    onClick={async () => {
+                                                      const name = await prompt({ title: 'Name this session', label: 'Name', defaultValue: 'New Session' })
+                                                      if (!name) return
+                                                      dispatch({ type: 'SESSION_ADD', ...ids, weekId: week.id, name })
+                                                    }}
+                                                  >
+                                                    + Add session
+                                                  </button>
                                                 </div>
                                               </div>
                                             )}

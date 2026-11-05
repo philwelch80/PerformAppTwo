@@ -12,6 +12,13 @@ export function getBlock(sub, id) {
 export function getWeek(block, id) {
   return block.weeks.find((w) => w.id === id)
 }
+
+// Weeks have no stored name — their display name is always derived from
+// position within the block, so copying or reordering weeks never leaves a
+// stale or colliding name behind (a custom label goes in week.focus).
+export function weekName(block, week) {
+  return `Week ${block.weeks.findIndex((w) => w.id === week.id) + 1}`
+}
 export function getSession(week, id) {
   return week.sessions.find((s) => s.id === id)
 }
@@ -74,6 +81,49 @@ export function cloneWeekWithFreshIds(week) {
     }
   })
   return copy
+}
+
+// Deep-clones a session and assigns fresh ids to it and its groups, so a
+// duplicate is fully independent of its source (same pattern as
+// cloneWeekWithFreshIds).
+export function cloneSessionWithFreshIds(session) {
+  const copy = JSON.parse(JSON.stringify(session))
+  copy.id = uid('sess')
+  if (copy.data?.groups) {
+    copy.data.groups.forEach((g) => {
+      g.id = uid('grp')
+    })
+  }
+  return copy
+}
+
+// Flattened weeks with their full path and a breadcrumb label, for a
+// single-select "which week" picker (e.g. the Library's "Add to week").
+export function allWeeksWithPath(plan) {
+  const rows = []
+  plan.phases.forEach((phase) =>
+    phase.subphases.forEach((sub) =>
+      sub.blocks.forEach((block) =>
+        block.weeks.forEach((week) => {
+          rows.push({
+            path: { phaseId: phase.id, subId: sub.id, blockId: block.id, weekId: week.id },
+            label: `${phase.name} › ${sub.name} › ${block.name} › ${weekName(block, week)}`,
+          })
+        }),
+      ),
+    ),
+  )
+  return rows
+}
+
+export function allSessions(plan) {
+  const sessions = []
+  plan.phases.forEach((phase) =>
+    phase.subphases.forEach((sub) =>
+      sub.blocks.forEach((block) => block.weeks.forEach((week) => sessions.push(...week.sessions))),
+    ),
+  )
+  return sessions
 }
 
 export function moveWithinArray(array, fromId, toId) {

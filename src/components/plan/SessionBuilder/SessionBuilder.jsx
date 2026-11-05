@@ -1,6 +1,9 @@
 import { useStore } from '../../../state/StoreContext.jsx'
 import { useToast } from '../../../state/ToastContext.jsx'
+import { useConfirm } from '../../../state/ConfirmContext.jsx'
+import { usePrompt } from '../../../state/PromptContext.jsx'
 import { SESSION_TYPES } from '../../../lib/taxonomy'
+import ScheduleFields from '../ScheduleFields.jsx'
 import StrengthEditor from './StrengthEditor.jsx'
 import ConditioningEditor from './ConditioningEditor.jsx'
 import MobilityEditor from './MobilityEditor.jsx'
@@ -11,22 +14,30 @@ function hasContent(session) {
   return session.data.items.length > 0
 }
 
-export default function SessionBuilder({ path, session }) {
+export default function SessionBuilder({ path, session, onDelete, hideSaveAsTemplate }) {
   const { dispatch } = useStore()
   const toast = useToast()
+  const confirm = useConfirm()
+  const prompt = usePrompt()
 
-  function setType(nextType) {
+  async function setType(nextType) {
     if (nextType === session.type) return
-    if (hasContent(session) && !window.confirm('Switching session type clears what you’ve entered for the current type. Continue?')) {
-      return
+    if (hasContent(session)) {
+      const ok = await confirm({
+        title: 'Switch session type?',
+        description: 'This clears what you’ve entered for the current type.',
+        confirmLabel: 'Switch',
+        danger: false,
+      })
+      if (!ok) return
     }
     dispatch({ type: 'SESSION_SET_TYPE', path, sessionType: nextType })
   }
 
-  function saveAsTemplate() {
-    const name = window.prompt('Name this saved session template', session.name)
-    if (!name || !name.trim()) return
-    dispatch({ type: 'SESSION_SAVE_AS_TEMPLATE', path, name: name.trim() })
+  async function saveAsTemplate() {
+    const name = await prompt({ title: 'Name this saved session template', label: 'Name', defaultValue: session.name })
+    if (!name) return
+    dispatch({ type: 'SESSION_SAVE_AS_TEMPLATE', path, name })
     toast('Saved as a reusable session template')
   }
 
@@ -44,13 +55,19 @@ export default function SessionBuilder({ path, session }) {
           />
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-sm" onClick={saveAsTemplate}>
-            Save as session template
-          </button>
+          {!hideSaveAsTemplate && (
+            <button className="btn btn-sm" onClick={saveAsTemplate}>
+              Save as session template
+            </button>
+          )}
           <button
             className="btn btn-danger-text btn-sm"
-            onClick={() => {
-              if (window.confirm('Delete this session?')) {
+            onClick={async () => {
+              const ok = await confirm({ title: `Delete "${session.name}"?` })
+              if (!ok) return
+              if (onDelete) {
+                onDelete()
+              } else {
                 dispatch({
                   type: 'NODE_DELETE',
                   kind: 'session',
@@ -65,6 +82,14 @@ export default function SessionBuilder({ path, session }) {
       </div>
 
       <div className="panel-pad">
+        {!path.savedSessionId && (
+          <>
+            <div className="subtle-label">Schedule</div>
+            <ScheduleFields path={path} session={session} idPrefix="sess-sched" />
+            <hr className="divider" />
+          </>
+        )}
+
         <div className="seg-control" role="tablist" aria-label="Session type">
           {SESSION_TYPES.map((t) => (
             <button key={t.id} className="seg-btn" role="tab" aria-pressed={session.type === t.id} onClick={() => setType(t.id)}>
@@ -77,7 +102,7 @@ export default function SessionBuilder({ path, session }) {
 
         {session.type === 'strength' && <StrengthEditor path={path} session={session} />}
         {session.type === 'conditioning' && <ConditioningEditor path={path} session={session} />}
-        {session.type === 'mobility' && <MobilityEditor path={path} session={session} />}
+        {session.type === 'routines' && <MobilityEditor path={path} session={session} />}
       </div>
     </div>
   )

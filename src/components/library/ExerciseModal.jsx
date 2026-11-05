@@ -1,7 +1,11 @@
 import { useState } from 'react'
 import { useStore } from '../../state/StoreContext.jsx'
 import { useToast } from '../../state/ToastContext.jsx'
+import { useConfirm } from '../../state/ConfirmContext.jsx'
 import { MOVEMENT_PATTERNS, EQUIPMENT, BODY_AREAS } from '../../lib/taxonomy'
+import { allTagNames, exerciseUsage } from '../../lib/exercises'
+import TagPicker from './TagPicker.jsx'
+import ExerciseUsageDialog from './ExerciseUsageDialog.jsx'
 
 const BLANK = {
   name: '',
@@ -11,34 +15,28 @@ const BLANK = {
   equipment: EQUIPMENT[0],
   bodyAreas: [],
   tags: [],
+  archived: false,
 }
 
 export default function ExerciseModal({ editingId, onClose }) {
   const { state, dispatch } = useStore()
   const toast = useToast()
+  const confirm = useConfirm()
   const isNew = editingId === 'new'
   const existing = isNew ? null : state.exercises.find((e) => e.id === editingId)
 
   const [form, setForm] = useState(existing ? { ...existing } : { ...BLANK })
-  const [tagDraft, setTagDraft] = useState('')
+  const [showUsageDialog, setShowUsageDialog] = useState(false)
 
   if (!isNew && !existing) return null
+
+  const allTags = allTagNames(state)
 
   function toggleBodyArea(area) {
     setForm((f) => ({
       ...f,
       bodyAreas: f.bodyAreas.includes(area) ? f.bodyAreas.filter((a) => a !== area) : [...f.bodyAreas, area],
     }))
-  }
-
-  function addTag() {
-    const v = tagDraft.trim().replace(/^#/, '')
-    if (v && !form.tags.includes(v)) setForm((f) => ({ ...f, tags: [...f.tags, v] }))
-    setTagDraft('')
-  }
-
-  function removeTag(t) {
-    setForm((f) => ({ ...f, tags: f.tags.filter((x) => x !== t) }))
   }
 
   function save() {
@@ -58,12 +56,33 @@ export default function ExerciseModal({ editingId, onClose }) {
     onClose()
   }
 
+  async function deleteOrArchive() {
+    const usage = exerciseUsage(state, editingId)
+    if (usage.total === 0) {
+      const ok = await confirm({ title: `Delete "${existing.name}"?`, description: 'This cannot be undone.' })
+      if (ok) {
+        dispatch({ type: 'EXERCISE_DELETE', id: editingId })
+        toast('Exercise deleted')
+        onClose()
+      }
+      return
+    }
+    setShowUsageDialog(true)
+  }
+
+  function archive() {
+    dispatch({ type: 'EXERCISE_ARCHIVE', id: editingId })
+    toast('Exercise archived')
+    setShowUsageDialog(false)
+    onClose()
+  }
+
   return (
-    <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal">
+    <>
+      <div className="panel panel-pad edit-panel">
         <div className="modal-head">
           <h3>{isNew ? 'New exercise' : 'Edit exercise'}</h3>
-          <button className="btn btn-ghost" onClick={onClose}>
+          <button className="btn btn-ghost" onClick={onClose} aria-label="Close">
             ×
           </button>
         </div>
@@ -107,7 +126,7 @@ export default function ExerciseModal({ editingId, onClose }) {
           <label>Body area(s)</label>
           <div>
             {BODY_AREAS.map((b) => (
-              <label key={b} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, margin: '2px 8px 2px 0', fontWeight: 400, color: 'var(--ink)' }}>
+              <label key={b} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, margin: '2px 8px 2px 0', fontWeight: 400, color: 'var(--text)' }}>
                 <input type="checkbox" style={{ width: 'auto' }} checked={form.bodyAreas.includes(b)} onChange={() => toggleBodyArea(b)} />
                 {b}
               </label>
@@ -115,41 +134,40 @@ export default function ExerciseModal({ editingId, onClose }) {
           </div>
         </div>
         <div className="field">
-          <label>Tags (yours to organize with)</label>
-          <div>
-            {form.tags.map((t) => (
-              <span className="chip chip-removable" key={t}>
-                #{t}{' '}
-                <button onClick={() => removeTag(t)} aria-label={`Remove tag ${t}`}>
-                  ×
-                </button>
-              </span>
-            ))}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <label style={{ marginBottom: 0 }}>Tags</label>
+            <span className="ex-desc">Tap to add or remove</span>
           </div>
-          <input
-            type="text"
-            placeholder="Type a tag and press Enter"
-            style={{ marginTop: 6 }}
-            value={tagDraft}
-            onChange={(e) => setTagDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && tagDraft.trim()) {
-                e.preventDefault()
-                addTag()
-              }
-            }}
-          />
+          <TagPicker allTags={allTags} selected={form.tags} onChange={(tags) => setForm({ ...form, tags })} />
         </div>
 
-        <div className="modal-actions">
-          <button className="btn" onClick={onClose}>
-            Cancel
-          </button>
-          <button className="btn btn-primary" onClick={save}>
-            Save exercise
-          </button>
+        <div className="modal-actions" style={{ justifyContent: 'space-between' }}>
+          {!isNew ? (
+            <button className="btn btn-danger-text" onClick={deleteOrArchive}>
+              Delete or archive…
+            </button>
+          ) : (
+            <span />
+          )}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn" onClick={onClose}>
+              Cancel
+            </button>
+            <button className="btn btn-primary" onClick={save}>
+              Save exercise
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {showUsageDialog && (
+        <ExerciseUsageDialog
+          exerciseName={existing.name}
+          usage={exerciseUsage(state, editingId)}
+          onArchive={archive}
+          onCancel={() => setShowUsageDialog(false)}
+        />
+      )}
+    </>
   )
 }

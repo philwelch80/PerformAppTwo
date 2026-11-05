@@ -1,0 +1,86 @@
+/* Design tokens. Source of truth for colour, type, size and spacing.
+   Extracted from the Claude Design mockups (docs/mockups/), with the contrast fixes noted below.
+   Use var(--token) in styles.css and components; do not hardcode colours. */
+:root {
+  /* Surfaces */
+  --page: #F3F5F4;
+  --surface: #FFFFFF;
+  --surface-sunken: #EEF1F0;
+  --header: #101418;
+  --header-raised: #26302F;          /* active nav tab on the header */
+  --header-text: #FFFFFF;
+  --header-text-soft: #C9D1CF;       /* 11.9:1 on --header */
+  --header-line: #4A5755;
+
+  /* Lines */
+  --line: #DDE2E0;                   /* card and table borders */
+  --line-strong: #C3CBC9;            /* inputs, secondary buttons */
+  --line-dashed: #8A9694;            /* empty slots, "Add week at end" (decorative, not text) */
+
+  /* Text. --text-muted is darker than the mockups' #6B7775, which fails 4.5:1 on --page and on bands. */
+  --text: #101418;
+  --text-soft: #44504E;
+  --text-muted: #55625F;
+  --text-on-accent: #FFFFFF;
+
+  /* Accent (teal) */
+  --accent: #0B6B5D;                 /* 6.41:1 on white; white on accent 6.41:1 */
+  --accent-strong: #0B4F44;
+  --accent-soft: #DCEBE8;
+
+  /* Danger */
+  --danger: #8A1F11;                 /* 9.19:1 on white */
+  --danger-soft: #FBEAE7;
+
+  /* Session types. Always show the letter (S / C / R) as well as the colour. */
+  --strength-bg: #DCEBE8;      --strength-fg: #0B4F44;
+  --conditioning-bg: #E3E8F6;  --conditioning-fg: #1F3A7A;
+  --routines-bg: #F3E6D8;      --routines-fg: #7A3E0F;
+
+  /* Phase / subphase / block bands: neutral only. Never reuse the session-type colours. */
+  --band-1-bg: #E7ECEA;  --band-1-fg: #2B3533;   /* phase */
+  --band-2-bg: #EEF1F0;  --band-2-fg: #2B3533;   /* subphase / block */
+
+  /* Focus and selection: one ring, one selected row (not its ancestors) */
+  --focus-ring: #0B6B5D;
+  --focus-width: 2px;
+  --selected-outline: 2px solid var(--header);
+
+  /* Type */
+  --font: 'Inter Tight', system-ui, sans-serif;
+  --fs-xs: 11px;   /* uppercase labels, pills */
+  --fs-s: 12px;    /* helper text, grid cells */
+  --fs-m: 13px;    /* dense table text */
+  --fs-base: 14px; /* body, buttons, inputs */
+  --fs-l: 16px;
+  --fs-xl: 18px;   /* brand, section titles */
+  --fs-2xl: 20px;  /* panel and dialog titles */
+  --fw-medium: 500; --fw-semibold: 600; --fw-bold: 700;
+  --tracking-title: -0.01em;
+  --tracking-label: 0.06em;  /* uppercase labels */
+
+  /* Radius */
+  --radius-xs: 4px;   /* tags in dense tables */
+  --radius-s: 6px;    /* buttons, inputs, cells */
+  --radius-m: 8px;    /* cards, session chips */
+  --radius-l: 12px;   /* modals, panels */
+  --radius-pill: 999px;
+
+  /* Spacing (4px base) */
+  --space-1: 4px; --space-2: 6px; --space-3: 8px; --space-4: 12px;
+  --space-5: 16px; --space-6: 24px; --space-7: 32px;
+
+  /* Control sizes */
+  --control-touch: 44px;   /* every button, input and select; minimum touch target */
+  --control-compact: 36px; /* dense desktop rows only; never the only way to do something */
+  --header-height: 64px;
+  --panel-width: 420px;    /* session quick-view */
+}
+
+body {
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  color: var(--text);
+  background: var(--page);
+  font-variant-numeric: tabular-nums;  /* sets, reps, load and counts line up */
+}

@@ -1,9 +1,11 @@
 import { useStore } from '../../state/StoreContext.jsx'
 import { useToast } from '../../state/ToastContext.jsx'
+import { useConfirm } from '../../state/ConfirmContext.jsx'
 
 export default function PhaseDetail({ phase }) {
   const { dispatch } = useStore()
   const toast = useToast()
+  const confirm = useConfirm()
 
   return (
     <div>
@@ -20,11 +22,12 @@ export default function PhaseDetail({ phase }) {
         </div>
         <button
           className="btn btn-danger-text btn-sm"
-          onClick={() => {
-            if (window.confirm('Delete this phase? This also removes everything inside it.')) {
-              dispatch({ type: 'NODE_DELETE', kind: 'phase', parts: [phase.id] })
-              toast('Phase deleted')
-            }
+          onClick={async () => {
+            const n = phase.subphases.length
+            const ok = await confirm({ title: `Delete "${phase.name}"?`, description: `This removes ${n} subphase${n === 1 ? '' : 's'}.` })
+            if (!ok) return
+            dispatch({ type: 'NODE_DELETE', kind: 'phase', parts: [phase.id] })
+            toast('Phase deleted')
           }}
         >
           Delete phase

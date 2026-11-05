@@ -5,7 +5,7 @@ export default function ExercisePicker({ onSelect, onClose }) {
   const { state } = useStore()
   const [q, setQ] = useState('')
 
-  const filtered = state.exercises.filter((e) => e.name.toLowerCase().includes(q.toLowerCase()))
+  const filtered = state.exercises.filter((e) => !e.archived && e.name.toLowerCase().includes(q.toLowerCase()))
 
   return (
     <div className="picker-popover">

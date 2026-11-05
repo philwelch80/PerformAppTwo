@@ -1,9 +1,11 @@
 import { useStore } from '../../state/StoreContext.jsx'
 import { useToast } from '../../state/ToastContext.jsx'
+import { useConfirm } from '../../state/ConfirmContext.jsx'
 
 export default function SubDetail({ path, sub }) {
   const { dispatch } = useStore()
   const toast = useToast()
+  const confirm = useConfirm()
 
   return (
     <div>
@@ -20,11 +22,12 @@ export default function SubDetail({ path, sub }) {
         </div>
         <button
           className="btn btn-danger-text btn-sm"
-          onClick={() => {
-            if (window.confirm('Delete this subphase? This also removes everything inside it.')) {
-              dispatch({ type: 'NODE_DELETE', kind: 'sub', parts: [path.phaseId, sub.id] })
-              toast('Subphase deleted')
-            }
+          onClick={async () => {
+            const n = sub.blocks.length
+            const ok = await confirm({ title: `Delete "${sub.name}"?`, description: `This removes ${n} block${n === 1 ? '' : 's'}.` })
+            if (!ok) return
+            dispatch({ type: 'NODE_DELETE', kind: 'sub', parts: [path.phaseId, sub.id] })
+            toast('Subphase deleted')
           }}
         >
           Delete subphase

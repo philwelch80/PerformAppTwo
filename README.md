@@ -34,7 +34,7 @@ Built and worth validating in this order (per the original coach input):
 2. **Training plan hierarchy** — including copy-week and plan extension, both flagged as pain
    points in the original spec
 3. **Session builder** — the three session types and their distinct data shapes
-4. **Reusable building blocks** — saved sessions and the new "session block" concept
+4. **Reuse** — exercise groups (saved bundles of exercises) and saved sessions, both living in the Library
 
 ## Running it locally
 
@@ -44,12 +44,14 @@ npm run dev
 ```
 
 Needs `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in a `.env.local` file (see
-`.env.example`) pointing at the `coach-plan-builder` Supabase project. Ask whoever set up the
+`.env.example`) pointing at the `coach-plan-builder` Supabase project. From slice 1 onward there is also
+`VITE_STATE_ROW_ID` (default `singleton`): use a different value for local and branch work so the live row is
+never touched. Ask whoever set up the
 project for the values, or create your own project and apply the schema below.
 
 ## Shared backend (Supabase)
 
-All shared data (exercises, the plan, saved session templates, session blocks) lives in one row
+All shared data (exercises, the plan, saved session templates, exercise groups) lives in one row
 of a single table:
 
 ```sql
@@ -84,13 +86,17 @@ hosting platform (same values as `.env.local`).
 
 ## Data model
 
+Describes **schema version 2** (the target of slice 1; see `docs/slice-1-plan.md`). The shared state carries a
+`schemaVersion`, and older saved data is upgraded on load by `src/lib/migrate.js`.
+
 ```
 Exercise
   id, name, description (coaching cues), videoUrl (optional)
   movementPattern: enum        // proposed default taxonomy, flagged as such in-app
   bodyAreas: string[]          // multi-select
   equipment: enum              // Barbell / Dumbbell / Kettlebell / Machine / Cable / Bodyweight / Band / Other
-  tags: string[]               // coach-managed, free-form, on top of the fields above
+  tags: string[]               // chosen from existing tags (or created deliberately), not free-typed
+  archived: boolean            // hidden from library/picker, still resolves where used
 
 Plan
   name
@@ -103,27 +109,40 @@ Week        { id, name, focus (free text), sessions: Session[] }
 
 Session
   id, name
-  type: 'strength' | 'conditioning' | 'mobility'
+  type: 'strength' | 'conditioning' | 'routines'
   data: <shape depends on type>
+  // added in slice 2: day (Mon–Sun) and slot (index into the plan's day slots, default AM / PM)
 
 // strength
 data.groups: Group[]
-Group { id, label (optional — e.g. "Superset A"), items: Item[] }
+Group { id, label (optional — e.g. "Superset A"), items: Item[], isSuperset: boolean }
+  // isSuperset => items are performed in rotation, one set at a time, in items order
+  // a single-item group is a plain straight set
 Item  { exerciseId, sets, reps, startingWeight (optional, free text) }
 
 // conditioning
 data: { modality, description, pacing, targetType: 'hr' | 'power', targetValue }
 
-// mobility / stretch
+// routines (the stretching / mobility / rehab type — "Routines" is the original name)
 data.items: { label, note }[]   // ordered, low-structure — a flow, not sets/reps
 
-SessionBlock   { id, name, items: Item[] }   // a saved bundle of exercises, one level
-                                              // below a full session (e.g. a warm-up)
-SavedSession   { id, name, type, data }      // a full session saved as a reusable template
+ExerciseGroup  { id, name, items: Item[], isSuperset, tags: string[] }   // saved bundle of exercises,
+                                                                          // one level below a full session
+SavedSession   { id, name, type, data }                                  // a full session saved as a reusable template
 ```
+
+Exercises are referenced by `exerciseId`, never copied, so renames propagate and archived exercises keep working
+in the groups and sessions that use them. Vocabulary: "Block" means only the plan hierarchy level; a saved bundle of
+exercises is an **exercise group**.
 
 Modeled so it doesn't preclude an athlete-side app later (session types and structure are shared
 concepts), even though no athlete UI is built here.
+
+## Docs
+
+- `CLAUDE.md` — conventions and working rules for anyone (or any tool) changing this code.
+- `docs/design-decisions.md` — current design decisions; wins over older specs where they conflict.
+- `docs/slice-1-plan.md` — the first build slice: data model, migration, and the Library.
 
 ## Assumptions to explicitly surface to coaches
 
@@ -132,13 +151,15 @@ questions from the original spec:
 - Whether strength sets should support a coach-prescribed starting weight at all
 - Whether the movement-pattern and body-area taxonomies (see `src/lib/taxonomy.js`) are the
   right cut, or coaches think in different categories
-- Whether "groups" (this prototype's stand-in for supersets/circuits) matches how coaches
-  actually structure sessions
+- Whether coaches want **circuits** (3+ exercises rotated) as a distinct concept, and whether the
+  superset rotation display reads clearly
+- Whether coaches actually use exercise groups (saved bundles of exercises), and whether a saved group
+  should be a linked or a copied reference when inserted
 
 ## What "done" looks like
 
 Not a shipped feature — a set of answers from coaches on: does the Phase→Subphase→Block→Week→
 Session hierarchy make sense to build a real plan in; does plan extension actually feel painless
 now; is the tag system on top of the built-in exercise fields useful or redundant; and do the
-three session types capture how coaches actually plan strength vs. conditioning vs. mobility
+three session types capture how coaches actually plan strength vs. conditioning vs. routines
 work.

@@ -2,16 +2,16 @@ import { uid } from './id'
 
 export function seedExercises() {
   return [
-    { id: uid('ex'), name: 'Back Squat', description: 'Bar on upper traps, brace before unrack. Cue: knees track over toes, chest tall out of the hole.', videoUrl: '', movementPattern: 'Squat', bodyAreas: ['Quads', 'Glutes'], equipment: 'Barbell', tags: ['staple'] },
-    { id: uid('ex'), name: 'Romanian Deadlift', description: 'Soft knees, hinge from the hips, bar stays close to the shins on the way down.', videoUrl: '', movementPattern: 'Hinge', bodyAreas: ['Hamstrings', 'Glutes'], equipment: 'Barbell', tags: ['staple', 'posterior-chain'] },
-    { id: uid('ex'), name: 'Bench Press', description: 'Shoulder blades pinned, feet driving into the floor, bar path touches low chest.', videoUrl: '', movementPattern: 'Push (Horizontal)', bodyAreas: ['Chest', 'Triceps'], equipment: 'Barbell', tags: ['staple'] },
-    { id: uid('ex'), name: 'Standing DB Shoulder Press', description: 'Ribs down, glutes braced — press without leaning back through the lumbar spine.', videoUrl: '', movementPattern: 'Push (Vertical)', bodyAreas: ['Shoulders', 'Triceps'], equipment: 'Dumbbell', tags: [] },
-    { id: uid('ex'), name: 'Chin-Up', description: 'Full hang to chin over bar. Add a plate once bodyweight x10 is easy.', videoUrl: '', movementPattern: 'Pull (Vertical)', bodyAreas: ['Back', 'Biceps'], equipment: 'Bodyweight', tags: ['staple'] },
-    { id: uid('ex'), name: 'Single-Arm DB Row', description: 'Flat back, row to hip not shoulder, control the negative.', videoUrl: '', movementPattern: 'Pull (Horizontal)', bodyAreas: ['Back', 'Biceps'], equipment: 'Dumbbell', tags: [] },
-    { id: uid('ex'), name: 'Walking Lunge', description: 'Long enough stride for a 90/90 front knee, torso stays tall.', videoUrl: '', movementPattern: 'Lunge / Single-Leg', bodyAreas: ['Quads', 'Glutes'], equipment: 'Dumbbell', tags: [] },
-    { id: uid('ex'), name: "Farmer's Carry", description: 'Heavy in each hand, tall posture, short fast steps.', videoUrl: '', movementPattern: 'Carry', bodyAreas: ['Full Body', 'Core'], equipment: 'Kettlebell', tags: ['conditioning-adjacent'] },
-    { id: uid('ex'), name: 'Pallof Press', description: 'Anti-rotation — resist the cable pulling you toward the anchor.', videoUrl: '', movementPattern: 'Rotation / Anti-Rotation', bodyAreas: ['Core'], equipment: 'Cable', tags: [] },
-    { id: uid('ex'), name: 'Hanging Leg Raise', description: 'Posterior pelvic tilt at the top, control the lower.', videoUrl: '', movementPattern: 'Core / Bracing', bodyAreas: ['Core'], equipment: 'Bodyweight', tags: [] },
+    { id: uid('ex'), name: 'Back Squat', description: 'Bar on upper traps, brace before unrack. Cue: knees track over toes, chest tall out of the hole.', videoUrl: '', movementPattern: 'Squat', bodyAreas: ['Quads', 'Glutes'], equipment: 'Barbell', tags: ['staple'], archived: false },
+    { id: uid('ex'), name: 'Romanian Deadlift', description: 'Soft knees, hinge from the hips, bar stays close to the shins on the way down.', videoUrl: '', movementPattern: 'Hinge', bodyAreas: ['Hamstrings', 'Glutes'], equipment: 'Barbell', tags: ['staple', 'posterior-chain'], archived: false },
+    { id: uid('ex'), name: 'Bench Press', description: 'Shoulder blades pinned, feet driving into the floor, bar path touches low chest.', videoUrl: '', movementPattern: 'Push (Horizontal)', bodyAreas: ['Chest', 'Triceps'], equipment: 'Barbell', tags: ['staple'], archived: false },
+    { id: uid('ex'), name: 'Standing DB Shoulder Press', description: 'Ribs down, glutes braced — press without leaning back through the lumbar spine.', videoUrl: '', movementPattern: 'Push (Vertical)', bodyAreas: ['Shoulders', 'Triceps'], equipment: 'Dumbbell', tags: ['accessory'], archived: false },
+    { id: uid('ex'), name: 'Chin-Up', description: 'Full hang to chin over bar. Add a plate once bodyweight x10 is easy.', videoUrl: '', movementPattern: 'Pull (Vertical)', bodyAreas: ['Back', 'Biceps'], equipment: 'Bodyweight', tags: ['staple'], archived: false },
+    { id: uid('ex'), name: 'Single-Arm DB Row', description: 'Flat back, row to hip not shoulder, control the negative.', videoUrl: '', movementPattern: 'Pull (Horizontal)', bodyAreas: ['Back', 'Biceps'], equipment: 'Dumbbell', tags: ['accessory'], archived: false },
+    { id: uid('ex'), name: 'Walking Lunge', description: 'Long enough stride for a 90/90 front knee, torso stays tall.', videoUrl: '', movementPattern: 'Lunge / Single-Leg', bodyAreas: ['Quads', 'Glutes'], equipment: 'Dumbbell', tags: [], archived: false },
+    { id: uid('ex'), name: "Farmer's Carry", description: 'Heavy in each hand, tall posture, short fast steps.', videoUrl: '', movementPattern: 'Carry', bodyAreas: ['Full Body', 'Core'], equipment: 'Kettlebell', tags: ['conditioning-adjacent'], archived: false },
+    { id: uid('ex'), name: 'Pallof Press', description: 'Anti-rotation — resist the cable pulling you toward the anchor.', videoUrl: '', movementPattern: 'Rotation / Anti-Rotation', bodyAreas: ['Core'], equipment: 'Cable', tags: ['core'], archived: false },
+    { id: uid('ex'), name: 'Hanging Leg Raise', description: 'Posterior pelvic tilt at the top, control the lower.', videoUrl: '', movementPattern: 'Core / Bracing', bodyAreas: ['Core'], equipment: 'Bodyweight', tags: ['core'], archived: false },
   ]
 }
 
@@ -20,7 +20,6 @@ export function seedPlan(exercises) {
 
   const week1 = {
     id: uid('week'),
-    name: 'Week 1',
     focus: 'Establish baseline loads',
     sessions: [
       {
@@ -29,7 +28,7 @@ export function seedPlan(exercises) {
         type: 'strength',
         data: {
           groups: [
-            { id: uid('grp'), label: '', items: [{ exerciseId: exId('Back Squat'), sets: 4, reps: 5, startingWeight: '' }] },
+            { id: uid('grp'), label: '', items: [{ exerciseId: exId('Back Squat'), sets: 4, reps: 5, startingWeight: '' }], isSuperset: false },
             {
               id: uid('grp'),
               label: 'Group A',
@@ -37,6 +36,7 @@ export function seedPlan(exercises) {
                 { exerciseId: exId('Walking Lunge'), sets: 3, reps: 10, startingWeight: '' },
                 { exerciseId: exId('Pallof Press'), sets: 3, reps: 12, startingWeight: '' },
               ],
+              isSuperset: true,
             },
           ],
         },
@@ -50,7 +50,7 @@ export function seedPlan(exercises) {
       {
         id: uid('sess'),
         name: 'Mobility Flow',
-        type: 'mobility',
+        type: 'routines',
         data: {
           items: [
             { label: '90/90 hip switches', note: '2 min per side' },
@@ -64,7 +64,6 @@ export function seedPlan(exercises) {
 
   const week2 = {
     id: uid('week'),
-    name: 'Week 2',
     focus: 'Add volume, same intensity',
     sessions: [
       {
@@ -73,7 +72,7 @@ export function seedPlan(exercises) {
         type: 'strength',
         data: {
           groups: [
-            { id: uid('grp'), label: '', items: [{ exerciseId: exId('Bench Press'), sets: 4, reps: 6, startingWeight: '' }] },
+            { id: uid('grp'), label: '', items: [{ exerciseId: exId('Bench Press'), sets: 4, reps: 6, startingWeight: '' }], isSuperset: false },
             {
               id: uid('grp'),
               label: 'Group A',
@@ -81,6 +80,7 @@ export function seedPlan(exercises) {
                 { exerciseId: exId('Chin-Up'), sets: 3, reps: 8, startingWeight: '' },
                 { exerciseId: exId('Single-Arm DB Row'), sets: 3, reps: 10, startingWeight: '' },
               ],
+              isSuperset: true,
             },
           ],
         },
@@ -106,16 +106,18 @@ export function seedPlan(exercises) {
   }
 }
 
-export function seedSessionBlocks(exercises) {
+export function seedExerciseGroups(exercises) {
   const exId = (name) => exercises.find((e) => e.name === name).id
   return [
     {
-      id: uid('sb'),
+      id: uid('xg'),
       name: 'Standard Warm-Up',
       items: [
         { exerciseId: exId('Walking Lunge'), sets: 2, reps: 10, startingWeight: '' },
         { exerciseId: exId('Pallof Press'), sets: 2, reps: 10, startingWeight: '' },
       ],
+      tags: ['warm-up'],
+      isSuperset: false,
     },
   ]
 }
@@ -144,8 +146,9 @@ export function freshState() {
     exercises,
     plan,
     savedSessions: [],
-    sessionBlocks: seedSessionBlocks(exercises),
+    exerciseGroups: seedExerciseGroups(exercises),
     selectedPath: null,
     expanded: expandedFromPlan(plan),
+    schemaVersion: 2,
   }
 }

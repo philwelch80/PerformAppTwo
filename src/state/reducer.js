@@ -2,20 +2,40 @@ import { produce } from 'immer'
 import { uid } from '../lib/id'
 import { emptySessionData } from '../lib/taxonomy'
 import { expandedFromPlan } from '../lib/seed'
+import { isExerciseInUse } from '../lib/exercises'
+import { defaultStartTimeForSlot, mondayOf } from '../lib/schedule'
 import {
   getPhase,
   getSub,
   getBlock,
   getWeek,
+  getSession,
   locatePath,
   resolveNode,
   deleteNode,
   cloneWeekWithFreshIds,
+  cloneSessionWithFreshIds,
   moveWithinArray,
 } from '../lib/planTree'
 
+// A path either locates a session in the plan tree, or (for editing a saved
+// session template from the Library) names a savedSessions entry directly.
 function sessionAt(draft, path) {
+  if (path.savedSessionId) return draft.savedSessions.find((s) => s.id === path.savedSessionId)
   return locatePath(draft.plan, path).session
+}
+
+// Whether a selection still has something to point at after a hydrate —
+// checked only down to the deepest level the path actually names, so e.g. a
+// phase-only selection isn't invalidated by a change deeper in the tree.
+function pathResolves(plan, path) {
+  const { phase, sub, block, week, session } = locatePath(plan, path)
+  if (path.sessionId) return !!session
+  if (path.weekId) return !!week
+  if (path.blockId) return !!block
+  if (path.subId) return !!sub
+  if (path.phaseId) return !!phase
+  return true
 }
 
 export function reducer(state, action) {
@@ -29,9 +49,20 @@ export function reducer(state, action) {
         draft.exercises = action.payload.exercises
         draft.plan = action.payload.plan
         draft.savedSessions = action.payload.savedSessions
-        draft.sessionBlocks = action.payload.sessionBlocks
-        draft.expanded = expandedFromPlan(action.payload.plan)
-        draft.selectedPath = null
+        draft.exerciseGroups = action.payload.exerciseGroups
+
+        // Add expand state for anything new (e.g. a week someone else just
+        // added), but never touch this viewer's own expand/collapse choices.
+        const freshExpanded = expandedFromPlan(action.payload.plan)
+        for (const id in freshExpanded) {
+          if (!(id in draft.expanded)) draft.expanded[id] = freshExpanded[id]
+        }
+
+        // selectedPath is this viewer's own navigation, not shared state —
+        // only clear it if the node it names is actually gone.
+        if (draft.selectedPath && !pathResolves(draft.plan, draft.selectedPath)) {
+          draft.selectedPath = null
+        }
         break
       }
 
@@ -46,7 +77,18 @@ export function reducer(state, action) {
         break
       }
       case 'EXERCISE_DELETE': {
+        if (isExerciseInUse(draft, action.id)) break
         draft.exercises = draft.exercises.filter((e) => e.id !== action.id)
+        break
+      }
+      case 'EXERCISE_ARCHIVE': {
+        const ex = draft.exercises.find((e) => e.id === action.id)
+        if (ex) ex.archived = true
+        break
+      }
+      case 'EXERCISE_RESTORE': {
+        const ex = draft.exercises.find((e) => e.id === action.id)
+        if (ex) ex.archived = false
         break
       }
 
@@ -63,6 +105,10 @@ export function reducer(state, action) {
       // ---------------- Plan structure ----------------
       case 'PLAN_RENAME': {
         draft.plan.name = action.name
+        break
+      }
+      case 'PLAN_START_DATE_UPDATE': {
+        draft.plan.startDate = mondayOf(action.date)
         break
       }
       case 'PHASE_ADD': {
@@ -90,7 +136,7 @@ export function reducer(state, action) {
       }
       case 'WEEK_ADD': {
         const block = getBlock(getSub(getPhase(draft.plan, action.phaseId), action.subId), action.blockId)
-        const week = { id: uid('week'), name: `Week ${block.weeks.length + 1}`, focus: '', sessions: [] }
+        const week = { id: uid('week'), focus: '', sessions: [] }
         block.weeks.push(week)
         draft.expanded[week.id] = true
         draft.selectedPath = { phaseId: action.phaseId, subId: action.subId, blockId: action.blockId, weekId: week.id }
@@ -100,7 +146,6 @@ export function reducer(state, action) {
         const block = getBlock(getSub(getPhase(draft.plan, action.phaseId), action.subId), action.blockId)
         const week = getWeek(block, action.weekId)
         const copy = cloneWeekWithFreshIds(week)
-        copy.name = `${week.name} copy`
         const idx = block.weeks.findIndex((w) => w.id === week.id)
         block.weeks.splice(idx + 1, 0, copy)
         draft.expanded[copy.id] = true
@@ -109,16 +154,39 @@ export function reducer(state, action) {
       }
       case 'SESSION_ADD': {
         const week = getWeek(getBlock(getSub(getPhase(draft.plan, action.phaseId), action.subId), action.blockId), action.weekId)
-        const session = { id: uid('sess'), name: 'New Session', type: 'strength', data: emptySessionData('strength') }
+        const name = action.name?.trim() || 'New Session'
+        const day = action.day ?? null
+        const slot = action.slot ?? null
+        const session = {
+          id: uid('sess'),
+          name,
+          type: 'strength',
+          data: emptySessionData('strength'),
+          day,
+          slot,
+          startTime: day != null && slot != null ? defaultStartTimeForSlot(slot) : null,
+          plannedRpe: null,
+          plannedMinutes: null,
+        }
         week.sessions.push(session)
-        draft.selectedPath = { ...action, sessionId: session.id }
+        draft.selectedPath = { phaseId: action.phaseId, subId: action.subId, blockId: action.blockId, weekId: action.weekId, sessionId: session.id }
         break
       }
       case 'SAVED_SESSION_INSERT': {
         const week = getWeek(getBlock(getSub(getPhase(draft.plan, action.phaseId), action.subId), action.blockId), action.weekId)
         const saved = draft.savedSessions.find((s) => s.id === action.savedSessionId)
         if (!saved) break
-        const session = { id: uid('sess'), name: saved.name, type: saved.type, data: JSON.parse(JSON.stringify(saved.data)) }
+        const session = {
+          id: uid('sess'),
+          name: saved.name,
+          type: saved.type,
+          data: JSON.parse(JSON.stringify(saved.data)),
+          day: null,
+          slot: null,
+          startTime: null,
+          plannedRpe: null,
+          plannedMinutes: null,
+        }
         if (session.data.groups) session.data.groups.forEach((g) => { g.id = uid('grp') })
         week.sessions.push(session)
         draft.selectedPath = {
@@ -128,6 +196,17 @@ export function reducer(state, action) {
           weekId: action.weekId,
           sessionId: session.id,
         }
+        break
+      }
+      case 'SESSION_DUPLICATE': {
+        const week = getWeek(getBlock(getSub(getPhase(draft.plan, action.phaseId), action.subId), action.blockId), action.weekId)
+        const session = getSession(week, action.sessionId)
+        if (!session) break
+        const copy = cloneSessionWithFreshIds(session)
+        copy.name = `${session.name} copy`
+        const idx = week.sessions.findIndex((s) => s.id === session.id)
+        week.sessions.splice(idx + 1, 0, copy)
+        draft.selectedPath = { phaseId: action.phaseId, subId: action.subId, blockId: action.blockId, weekId: action.weekId, sessionId: copy.id }
         break
       }
       case 'NODE_RENAME': {
@@ -173,11 +252,36 @@ export function reducer(state, action) {
         }
         break
       }
+      // Occupied cells are allowed (several sessions can share a day/slot —
+      // decision 3); this never rejects. Becoming unscheduled (both day and
+      // slot null) clears startTime too. Otherwise, an explicit startTime is
+      // honored as-is; changing it never moves the session to another slot.
+      // A session newly scheduled with no startTime yet gets the slot's
+      // default (decision 4/8).
+      case 'SESSION_SCHEDULE_UPDATE': {
+        const session = sessionAt(draft, action.path)
+        if (!session) break
+        if ('day' in action) session.day = action.day
+        if ('slot' in action) session.slot = action.slot
+        if (session.day == null && session.slot == null) {
+          session.startTime = null
+        } else if ('startTime' in action) {
+          session.startTime = action.startTime
+        } else if (session.startTime == null) {
+          session.startTime = defaultStartTimeForSlot(session.slot)
+        }
+        break
+      }
+      case 'SESSION_PLANNED_UPDATE': {
+        const session = sessionAt(draft, action.path)
+        if (session) session[action.field] = action.value
+        break
+      }
 
       // strength
       case 'GROUP_ADD': {
         const session = sessionAt(draft, action.path)
-        session.data.groups.push({ id: uid('grp'), label: '', items: [] })
+        session.data.groups.push({ id: uid('grp'), label: '', items: [], isSuperset: false })
         break
       }
       case 'GROUP_RENAME': {
@@ -194,7 +298,7 @@ export function reducer(state, action) {
       case 'GROUP_ITEM_ADD': {
         const session = sessionAt(draft, action.path)
         const group = session.data.groups.find((g) => g.id === action.groupId)
-        group.items.push({ exerciseId: action.exerciseId, sets: 3, reps: 10, startingWeight: '' })
+        group.items.push({ exerciseId: action.exerciseId, sets: 3, reps: '10', startingWeight: '' })
         break
       }
       case 'GROUP_ITEM_UPDATE': {
@@ -209,25 +313,67 @@ export function reducer(state, action) {
         group.items.splice(action.itemIndex, 1)
         break
       }
-      case 'GROUP_SAVE_AS_BLOCK': {
+      case 'GROUP_SAVE_AS_GROUP': {
         const session = sessionAt(draft, action.path)
         const group = session.data.groups.find((g) => g.id === action.groupId)
-        draft.sessionBlocks.push({
-          id: uid('sb'),
+        if (!group || group.items.length < 2) break
+        const items = JSON.parse(JSON.stringify(group.items))
+        if (!action.includeWeights) items.forEach((item) => { item.startingWeight = '' })
+        draft.exerciseGroups.push({
+          id: uid('xg'),
           name: action.name,
-          items: JSON.parse(JSON.stringify(group.items)),
+          items,
+          tags: [],
+          isSuperset: group.isSuperset,
         })
         break
       }
-      case 'SESSION_BLOCK_INSERT': {
+      case 'EXERCISE_GROUP_INSERT': {
         const session = sessionAt(draft, action.path)
-        const block = draft.sessionBlocks.find((b) => b.id === action.sessionBlockId)
-        if (!block) break
-        session.data.groups.push({ id: uid('grp'), label: block.name, items: JSON.parse(JSON.stringify(block.items)) })
+        const exerciseGroup = draft.exerciseGroups.find((g) => g.id === action.exerciseGroupId)
+        if (!exerciseGroup) break
+        const newGroup = {
+          id: uid('grp'),
+          label: exerciseGroup.name,
+          items: JSON.parse(JSON.stringify(exerciseGroup.items)),
+          isSuperset: exerciseGroup.isSuperset,
+        }
+        const index = action.position ?? session.data.groups.length
+        session.data.groups.splice(index, 0, newGroup)
         break
       }
-      case 'SESSION_BLOCK_DELETE': {
-        draft.sessionBlocks = draft.sessionBlocks.filter((b) => b.id !== action.id)
+      case 'EXERCISE_GROUP_ADD': {
+        draft.exerciseGroups.push({ id: action.id, name: action.name, items: [], tags: [], isSuperset: false })
+        break
+      }
+      case 'EXERCISE_GROUP_DELETE': {
+        draft.exerciseGroups = draft.exerciseGroups.filter((g) => g.id !== action.id)
+        break
+      }
+      case 'EXERCISE_GROUP_UPDATE': {
+        const group = draft.exerciseGroups.find((g) => g.id === action.id)
+        if (group) Object.assign(group, action.payload)
+        break
+      }
+      case 'EXERCISE_GROUP_DUPLICATE': {
+        const group = draft.exerciseGroups.find((g) => g.id === action.id)
+        if (!group) break
+        draft.exerciseGroups.push({ ...JSON.parse(JSON.stringify(group)), id: uid('xg'), name: `${group.name} copy` })
+        break
+      }
+      case 'EXERCISE_GROUP_ITEM_ADD': {
+        const group = draft.exerciseGroups.find((g) => g.id === action.id)
+        group.items.push({ exerciseId: action.exerciseId, sets: 3, reps: '10', startingWeight: '' })
+        break
+      }
+      case 'EXERCISE_GROUP_ITEM_UPDATE': {
+        const group = draft.exerciseGroups.find((g) => g.id === action.id)
+        group.items[action.itemIndex][action.field] = action.value
+        break
+      }
+      case 'EXERCISE_GROUP_ITEM_DELETE': {
+        const group = draft.exerciseGroups.find((g) => g.id === action.id)
+        group.items.splice(action.itemIndex, 1)
         break
       }
 
@@ -238,23 +384,23 @@ export function reducer(state, action) {
         break
       }
 
-      // mobility
-      case 'MOBILITY_ITEM_ADD': {
+      // routines
+      case 'ROUTINE_ITEM_ADD': {
         const session = sessionAt(draft, action.path)
         session.data.items.push({ label: '', note: '' })
         break
       }
-      case 'MOBILITY_ITEM_UPDATE': {
+      case 'ROUTINE_ITEM_UPDATE': {
         const session = sessionAt(draft, action.path)
         session.data.items[action.index][action.field] = action.value
         break
       }
-      case 'MOBILITY_ITEM_DELETE': {
+      case 'ROUTINE_ITEM_DELETE': {
         const session = sessionAt(draft, action.path)
         session.data.items.splice(action.index, 1)
         break
       }
-      case 'MOBILITY_ITEMS_REORDER': {
+      case 'ROUTINE_ITEMS_REORDER': {
         const session = sessionAt(draft, action.path)
         const [moved] = session.data.items.splice(action.fromIndex, 1)
         session.data.items.splice(action.toIndex, 0, moved)
