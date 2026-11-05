@@ -1,10 +1,12 @@
 import { useStore } from '../../state/StoreContext.jsx'
 import { useToast } from '../../state/ToastContext.jsx'
+import { useConfirm } from '../../state/ConfirmContext.jsx'
 import { weekName } from '../../lib/planTree'
 
 export default function BlockDetail({ path, block }) {
   const { dispatch } = useStore()
   const toast = useToast()
+  const confirm = useConfirm()
 
   return (
     <div>
@@ -23,11 +25,12 @@ export default function BlockDetail({ path, block }) {
         </div>
         <button
           className="btn btn-danger-text btn-sm"
-          onClick={() => {
-            if (window.confirm('Delete this block? This also removes everything inside it.')) {
-              dispatch({ type: 'NODE_DELETE', kind: 'block', parts: [path.phaseId, path.subId, block.id] })
-              toast('Block deleted')
-            }
+          onClick={async () => {
+            const n = block.weeks.length
+            const ok = await confirm({ title: `Delete "${block.name}"?`, description: `This removes ${n} week${n === 1 ? '' : 's'}.` })
+            if (!ok) return
+            dispatch({ type: 'NODE_DELETE', kind: 'block', parts: [path.phaseId, path.subId, block.id] })
+            toast('Block deleted')
           }}
         >
           Delete block

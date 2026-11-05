@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../../state/StoreContext.jsx'
 import { useToast } from '../../state/ToastContext.jsx'
+import { useConfirm } from '../../state/ConfirmContext.jsx'
+import { usePrompt } from '../../state/PromptContext.jsx'
 import { sessionTypeInfo } from '../../lib/taxonomy'
 import { weekName } from '../../lib/planTree'
 
@@ -28,6 +30,8 @@ function rowClass(selectedPath, idKey, id, deeperKey) {
 export default function PlanTree() {
   const { state, dispatch } = useStore()
   const toast = useToast()
+  const confirm = useConfirm()
+  const prompt = usePrompt()
   const dragCtx = useRef(null)
   const { plan, expanded, selectedPath } = state
   const [openWeekMenu, setOpenWeekMenu] = useState(null)
@@ -55,13 +59,14 @@ export default function PlanTree() {
   function toggle(id) {
     dispatch({ type: 'TOGGLE_EXPAND', id })
   }
-  function rename(kind, parts, currentName) {
-    const next = window.prompt(`Rename ${KIND_LABEL[kind].toLowerCase()}`, currentName)
-    if (next !== null && next.trim()) dispatch({ type: 'NODE_RENAME', kind, parts, name: next.trim() })
+  async function rename(kind, parts, currentName) {
+    const next = await prompt({ title: `Rename ${KIND_LABEL[kind].toLowerCase()}`, label: 'Name', defaultValue: currentName })
+    if (next) dispatch({ type: 'NODE_RENAME', kind, parts, name: next })
   }
-  function remove(kind, parts) {
-    if (HAS_CHILDREN[kind] && !window.confirm(`Delete this ${KIND_LABEL[kind].toLowerCase()}? This also removes everything inside it.`)) {
-      return
+  async function remove(kind, parts, { title, description } = {}) {
+    if (HAS_CHILDREN[kind]) {
+      const ok = await confirm({ title: title || `Delete this ${KIND_LABEL[kind].toLowerCase()}?`, description })
+      if (!ok) return
     }
     dispatch({ type: 'NODE_DELETE', kind, parts })
     toast(`${KIND_LABEL[kind]} deleted`)
@@ -134,7 +139,14 @@ export default function PlanTree() {
                   <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); rename('phase', [phase.id], phase.name) }}>
                     Rename
                   </button>
-                  <button className="btn btn-ghost btn-sm btn-danger-text" onClick={(e) => { e.stopPropagation(); remove('phase', [phase.id]) }}>
+                  <button
+                    className="btn btn-ghost btn-sm btn-danger-text"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      const n = phase.subphases.length
+                      remove('phase', [phase.id], { title: `Delete "${phase.name}"?`, description: `This removes ${n} subphase${n === 1 ? '' : 's'}.` })
+                    }}
+                  >
                     Delete
                   </button>
                 </span>
@@ -165,7 +177,14 @@ export default function PlanTree() {
                             <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); rename('sub', [phase.id, sub.id], sub.name) }}>
                               Rename
                             </button>
-                            <button className="btn btn-ghost btn-sm btn-danger-text" onClick={(e) => { e.stopPropagation(); remove('sub', [phase.id, sub.id]) }}>
+                            <button
+                              className="btn btn-ghost btn-sm btn-danger-text"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                const n = sub.blocks.length
+                                remove('sub', [phase.id, sub.id], { title: `Delete "${sub.name}"?`, description: `This removes ${n} block${n === 1 ? '' : 's'}.` })
+                              }}
+                            >
                               Delete
                             </button>
                           </span>
@@ -205,7 +224,11 @@ export default function PlanTree() {
                                       </button>
                                       <button
                                         className="btn btn-ghost btn-sm btn-danger-text"
-                                        onClick={(e) => { e.stopPropagation(); remove('block', [phase.id, sub.id, block.id]) }}
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          const n = block.weeks.length
+                                          remove('block', [phase.id, sub.id, block.id], { title: `Delete "${block.name}"?`, description: `This removes ${n} week${n === 1 ? '' : 's'}.` })
+                                        }}
                                       >
                                         Delete
                                       </button>
@@ -282,7 +305,11 @@ export default function PlanTree() {
                                                       onClick={(e) => {
                                                         e.stopPropagation()
                                                         setOpenWeekMenu(null)
-                                                        remove('week', [phase.id, sub.id, block.id, week.id])
+                                                        const n = week.sessions.length
+                                                        remove('week', [phase.id, sub.id, block.id, week.id], {
+                                                          title: `Delete ${label}?`,
+                                                          description: `This removes ${n} session${n === 1 ? '' : 's'}.`,
+                                                        })
                                                       }}
                                                     >
                                                       Delete
@@ -330,9 +357,9 @@ export default function PlanTree() {
                                                 })}
                                                 <div className="tree-add-row">
                                                   <button
-                                                    onClick={() => {
-                                                      const name = window.prompt('Name this session', 'New Session')
-                                                      if (name === null) return
+                                                    onClick={async () => {
+                                                      const name = await prompt({ title: 'Name this session', label: 'Name', defaultValue: 'New Session' })
+                                                      if (!name) return
                                                       dispatch({ type: 'SESSION_ADD', ...ids, weekId: week.id, name })
                                                     }}
                                                   >

@@ -1,13 +1,18 @@
 import { useState } from 'react'
 import { useStore } from '../../state/StoreContext.jsx'
 import { useToast } from '../../state/ToastContext.jsx'
+import { useConfirm } from '../../state/ConfirmContext.jsx'
+import { usePrompt } from '../../state/PromptContext.jsx'
 import { sessionTypeInfo } from '../../lib/taxonomy'
 import { weekName } from '../../lib/planTree'
 
 export default function WeekDetail({ path, block, week }) {
   const { state, dispatch } = useStore()
   const toast = useToast()
+  const confirm = useConfirm()
+  const prompt = usePrompt()
   const [templateId, setTemplateId] = useState('')
+  const label = weekName(block, week)
 
   return (
     <div>
@@ -15,16 +20,17 @@ export default function WeekDetail({ path, block, week }) {
         <div style={{ flex: 1 }}>
           <div className="subtle-label">Week</div>
           <div className="plan-title-input" style={{ padding: '4px 0', border: '1px solid transparent' }}>
-            {weekName(block, week)}
+            {label}
           </div>
         </div>
         <button
           className="btn btn-danger-text btn-sm"
-          onClick={() => {
-            if (window.confirm('Delete this week? This also removes its sessions.')) {
-              dispatch({ type: 'NODE_DELETE', kind: 'week', parts: [path.phaseId, path.subId, path.blockId, week.id] })
-              toast('Week deleted')
-            }
+          onClick={async () => {
+            const n = week.sessions.length
+            const ok = await confirm({ title: `Delete ${label}?`, description: `This removes ${n} session${n === 1 ? '' : 's'}.` })
+            if (!ok) return
+            dispatch({ type: 'NODE_DELETE', kind: 'week', parts: [path.phaseId, path.subId, path.blockId, week.id] })
+            toast('Week deleted')
           }}
         >
           Delete week
@@ -69,9 +75,9 @@ export default function WeekDetail({ path, block, week }) {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
           <button
             className="btn btn-sm"
-            onClick={() => {
-              const name = window.prompt('Name this session', 'New Session')
-              if (name === null) return
+            onClick={async () => {
+              const name = await prompt({ title: 'Name this session', label: 'Name', defaultValue: 'New Session' })
+              if (!name) return
               dispatch({ type: 'SESSION_ADD', phaseId: path.phaseId, subId: path.subId, blockId: path.blockId, weekId: week.id, name })
             }}
           >
