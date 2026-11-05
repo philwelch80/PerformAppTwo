@@ -3,6 +3,7 @@ import { useStore } from '../../state/StoreContext.jsx'
 import { useToast } from '../../state/ToastContext.jsx'
 import { useConfirm } from '../../state/ConfirmContext.jsx'
 import { tagCounts, exerciseGroupUsageCount } from '../../lib/exercises'
+import { uid } from '../../lib/id'
 import TagFilterPills from './TagFilterPills.jsx'
 import ExerciseGroupModal from './ExerciseGroupModal.jsx'
 
@@ -28,16 +29,25 @@ export default function ExerciseGroupsTab() {
   const counts = useMemo(() => tagCounts(state.exerciseGroups), [state.exerciseGroups])
   const filtered = state.exerciseGroups.filter((g) => passesFilter(g, filter))
 
+  function addGroup() {
+    const id = uid('xg')
+    dispatch({ type: 'EXERCISE_GROUP_ADD', id, name: 'New exercise group' })
+    setEditingId(id)
+  }
+
   return (
     <div className="library-layout">
       <aside className="library-sidebar">
-        <input
-          type="text"
-          aria-label="Search exercise groups"
-          placeholder="Search exercise groups…"
-          value={filter.q}
-          onChange={(e) => setFilter({ ...filter, q: e.target.value })}
-        />
+        <div className="sidebar-group">
+          <div className="subtle-label">Search</div>
+          <input
+            type="text"
+            aria-label="Search exercise groups"
+            placeholder="Group name"
+            value={filter.q}
+            onChange={(e) => setFilter({ ...filter, q: e.target.value })}
+          />
+        </div>
 
         <div className="sidebar-group">
           <div className="subtle-label">Contains exercise</div>
@@ -55,11 +65,6 @@ export default function ExerciseGroupsTab() {
           </select>
         </div>
 
-        <div className="sidebar-group">
-          <div className="subtle-label">Filters</div>
-          <TagFilterPills counts={counts} active={filter.tag} onSelect={(tag) => setFilter({ ...filter, tag: tag || '' })} />
-        </div>
-
         <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 400, color: 'var(--ink)' }}>
           <input
             type="checkbox"
@@ -69,9 +74,22 @@ export default function ExerciseGroupsTab() {
           />
           Supersets only
         </label>
+
+        <div className="sidebar-group">
+          <div className="subtle-label">Filters</div>
+          <TagFilterPills counts={counts} active={filter.tag} onSelect={(tag) => setFilter({ ...filter, tag: tag || '' })} />
+        </div>
+
+        <div className="ex-desc">Body area and equipment filters apply to single exercises, so they&apos;re hidden here.</div>
       </aside>
 
       <div className="library-main">
+        <div className="lib-toolbar" style={{ justifyContent: 'flex-end' }}>
+          <button className="btn btn-primary" onClick={addGroup}>
+            + New exercise group
+          </button>
+        </div>
+
         {filtered.length === 0 ? (
           <div className="empty-state">
             {state.exerciseGroups.length === 0
@@ -105,7 +123,7 @@ export default function ExerciseGroupsTab() {
                       ))}
                     </div>
                   )}
-                  <div className="ex-desc" style={{ marginTop: 4 }}>used in {usedIn} session{usedIn === 1 ? '' : 's'}</div>
+                  <div className="ex-desc" style={{ marginTop: 4 }}>Used in {usedIn} session{usedIn === 1 ? '' : 's'}</div>
                   <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
                     <button className="btn btn-ghost btn-sm" onClick={() => setEditingId(g.id)}>
                       Edit

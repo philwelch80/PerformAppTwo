@@ -79,3 +79,20 @@ export function exerciseGroupUsageCount(state, exerciseGroup) {
     (session) => session.type === 'strength' && session.data.groups.some((g) => g.label === exerciseGroup.name),
   ).length
 }
+
+// Best-effort "used in N weeks" for a saved session's card — same caveat as
+// exerciseGroupUsageCount: "Add to week" copies the session, so this counts
+// weeks containing a same-name, same-type session, not a tracked reference.
+export function savedSessionUsageCount(state, savedSession) {
+  let weeks = 0
+  state.plan.phases.forEach((phase) =>
+    phase.subphases.forEach((sub) =>
+      sub.blocks.forEach((block) =>
+        block.weeks.forEach((week) => {
+          if (week.sessions.some((s) => s.name === savedSession.name && s.type === savedSession.type)) weeks += 1
+        }),
+      ),
+    ),
+  )
+  return weeks
+}

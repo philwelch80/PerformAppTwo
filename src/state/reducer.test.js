@@ -100,6 +100,17 @@ describe('GROUP_SAVE_AS_GROUP', () => {
   })
 })
 
+describe('EXERCISE_GROUP_ADD', () => {
+  it('adds a blank exercise group with the given id and name', () => {
+    const state = initialState()
+    const countBefore = state.exerciseGroups.length
+    const next = reducer(state, { type: 'EXERCISE_GROUP_ADD', id: 'xg-new', name: 'New exercise group' })
+    expect(next.exerciseGroups.length).toBe(countBefore + 1)
+    const added = next.exerciseGroups.find((g) => g.id === 'xg-new')
+    expect(added).toEqual({ id: 'xg-new', name: 'New exercise group', items: [], tags: [], isSuperset: false })
+  })
+})
+
 describe('EXERCISE_GROUP_INSERT / EXERCISE_GROUP_DELETE', () => {
   it('inserts a saved exercise group into a session as a new group, at the end by default', () => {
     const state = initialState()

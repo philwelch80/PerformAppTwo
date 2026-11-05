@@ -26,7 +26,7 @@ export default function TagFilterPills({ counts, active, onSelect }) {
       ))}
       {counts.length > COLLAPSED_COUNT && (
         <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowAll((v) => !v)}>
-          {showAll ? 'Show fewer' : `Show all (${counts.length})`}
+          {showAll ? 'Show fewer' : `Show all ${counts.length} tags`}
         </button>
       )}
     </div>

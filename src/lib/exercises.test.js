@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { exerciseUsage, isExerciseInUse, tagCounts, allTagNames, findCloseTag, exerciseGroupUsageCount } from './exercises'
+import { exerciseUsage, isExerciseInUse, tagCounts, allTagNames, findCloseTag, exerciseGroupUsageCount, savedSessionUsageCount } from './exercises'
 import { migrate } from './migrate'
 import { freshState } from './seed'
 
@@ -129,5 +129,25 @@ describe('exerciseGroupUsageCount', () => {
     const state = migrate(freshState())
     const group = { id: 'xg-1', name: 'Totally Unused Name', items: [], tags: [], isSuperset: true }
     expect(exerciseGroupUsageCount(state, group)).toBe(0)
+  })
+})
+
+describe('savedSessionUsageCount', () => {
+  it('counts weeks containing a plan session with the same name and type', () => {
+    const state = migrate(freshState())
+    const saved = { id: 'tpl-1', name: 'Lower A', type: 'strength', data: { groups: [] } }
+    expect(savedSessionUsageCount(state, saved)).toBe(1) // seeded "Lower A" appears in Week 1 only
+  })
+
+  it('is zero when no week has a matching session', () => {
+    const state = migrate(freshState())
+    const saved = { id: 'tpl-1', name: 'Totally Unused Name', type: 'strength', data: { groups: [] } }
+    expect(savedSessionUsageCount(state, saved)).toBe(0)
+  })
+
+  it('does not match a same-named session of a different type', () => {
+    const state = migrate(freshState())
+    const saved = { id: 'tpl-1', name: 'Lower A', type: 'conditioning', data: {} }
+    expect(savedSessionUsageCount(state, saved)).toBe(0)
   })
 })

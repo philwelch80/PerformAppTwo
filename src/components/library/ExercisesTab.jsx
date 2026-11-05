@@ -27,13 +27,16 @@ export default function ExercisesTab() {
   return (
     <div className={`library-layout${editingId ? ' has-panel' : ''}`}>
       <aside className="library-sidebar">
-        <input
-          type="text"
-          aria-label="Search exercises"
-          placeholder="Search exercises…"
-          value={filter.q}
-          onChange={(e) => setFilter({ ...filter, q: e.target.value })}
-        />
+        <div className="sidebar-group">
+          <div className="subtle-label">Search</div>
+          <input
+            type="text"
+            aria-label="Search exercises"
+            placeholder="Exercise name"
+            value={filter.q}
+            onChange={(e) => setFilter({ ...filter, q: e.target.value })}
+          />
+        </div>
 
         <div className="sidebar-group">
           <div className="subtle-label">Body area</div>
@@ -86,7 +89,7 @@ export default function ExercisesTab() {
       <div className="library-main">
         <div className="lib-toolbar" style={{ justifyContent: 'flex-end' }}>
           <button className="btn btn-primary" onClick={() => setEditingId('new')}>
-            + New exercise
+            + Add exercise
           </button>
         </div>
 

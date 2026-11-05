@@ -277,6 +277,10 @@ export function reducer(state, action) {
         session.data.groups.splice(index, 0, newGroup)
         break
       }
+      case 'EXERCISE_GROUP_ADD': {
+        draft.exerciseGroups.push({ id: action.id, name: action.name, items: [], tags: [], isSuperset: false })
+        break
+      }
       case 'EXERCISE_GROUP_DELETE': {
         draft.exerciseGroups = draft.exerciseGroups.filter((g) => g.id !== action.id)
         break

@@ -134,7 +134,10 @@ export default function ExerciseModal({ editingId, onClose }) {
           </div>
         </div>
         <div className="field">
-          <label>Tags</label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <label style={{ marginBottom: 0 }}>Tags</label>
+            <span className="ex-desc">Tap to add or remove</span>
+          </div>
           <TagPicker allTags={allTags} selected={form.tags} onChange={(tags) => setForm({ ...form, tags })} />
         </div>
 
