@@ -82,9 +82,8 @@ Per-viewer only (never synced, same rule as `selectedPath`/`expanded` today): Ou
 
 - Configurable day slots (more than AM/PM, custom names/order) — stays parked.
 - Replace-with-another-exercise merge — stays parked (slice 1's `ExerciseUsageDialog` already notes this).
-- A real load metric for the season strip (bars are a flat placeholder until one is defined).
-- Mobile master-detail layout for the grid (parking lot **V6**) — the grid gets the same responsive narrowing as the quick-view panel, nothing more.
 - Load-bar polish beyond the metric in `docs/definitions.md` (no per-exercise load, no tonnage).
+- Mobile master-detail layout for the grid (parking lot **V6**) — the grid gets the same responsive narrowing as the quick-view panel, nothing more.
 - A dedicated multi-session cell design beyond stacking (see Decisions, item 3).
 
 ## Decisions (Phil, 2026-11-05)
