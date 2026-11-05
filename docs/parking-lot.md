@@ -14,7 +14,7 @@ Findings from the slice-1 QA review that are explicitly out of scope for now —
 | V21 | A real load/tempo/rest model for strength sets — today there's only `startingWeight` (free text) alongside sets/reps. | |
 | S2 | Drag-and-drop reordering (weeks, sessions, routine items) needs a manual test pass — it can't be verified by the automated browser tooling used for this round of fixes. | |
 | S3 | Concurrent-edit handling — the app is explicitly last-write-wins with no conflict resolution (see CLAUDE.md's "Sync" section); a real merge/locking story is out of scope. | |
-| S5 | Contrast measurement — CLAUDE.md requires 4.5:1 text contrast but nothing here has actually measured the current palette against it. | |
+| S5 | Contrast measurement — CLAUDE.md requires 4.5:1 text contrast but nothing here has actually measured the current palette against it. | **Done** (2026-11-05 restyle): measured every text/background pair in the new mockup palette. `--steel` (`#6B7775` as given) failed at 4.24:1 on the page background and was darkened to `#5B6563` (5.5:1 on page, 6.0:1 on white). Everything else — `--ink-soft`, `--accent-ink`/`--strength` on its soft bg, conditioning/routines text on their soft bgs, `--danger`, white-on-header, white-on-accent-button — passes with margin. See `design-decisions.md` §9. |
 | S6 | Large-plan performance — untested with a plan of realistic size (many phases/weeks/sessions); the tree and sync payload are both O(whole plan). | |
 
 ## Missing, for a coach to actually use this
