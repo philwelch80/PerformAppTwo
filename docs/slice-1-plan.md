@@ -71,3 +71,23 @@ Plan grid and slots, superset rotation UI, session quick-view panel, replace-wit
 - Migrated groups with two or more items are marked as supersets; coaches who used groups for something else will need to untick it. Worth a line in the coach message when this ships.
 - The whole shared state is still one JSON row with last-write-wins. Bigger operations such as archive touch only one record, so this is acceptable for now.
 - Deploying slice 1 to the live site means everyone's row gets migrated at once. Plan to do that out of hours and keep a copy of the pre-migration row.
+
+## QA fixes already made (post-slice-1, pre-1b)
+
+A QA pass against the deploy preview found a batch of bugs and gaps, fixed on this branch before slice 1b started — see `docs/design-decisions.md`'s "Supplement 2026-11-05" for the resulting decisions. Summary: the session/week editor self-closing on poll (HYDRATE resetting local nav state); the dev-row/live-row isolation gap in Netlify's deploy-preview env; sets/reps validation and free-text reps; the week kebab menu (actions were crowding the label); the archive dialog's title and session naming; tag hint/selection and case normalization; an accessibility sweep (dialogs, plan-tree rows as real buttons, labels, touch targets); selection highlighting only the actual target, not every ancestor; and weeks numbered by position instead of stored names. Schema moved from v2 to v5 across four small migrations. `docs/parking-lot.md` lists what was explicitly deferred.
+
+## Slice 1b — dialogs
+
+Goal: replace every remaining native `window.prompt`/`window.confirm` with the shared `Modal` component, and give "Save as exercise group" / "Insert exercise group" their own dialogs matching the mockups' Dialogs board, instead of a `prompt()` and a bare popover.
+
+- **Save as exercise group** (`StrengthEditor.jsx`): a `Modal` with a required, trimmed name field (rejects a case-insensitive duplicate name inline), a preview of the exercises/sets/reps being saved, and an "Include starting weights" checkbox (already decided in `design-decisions.md` §2) — unchanged from today, it's offered only for groups with 2+ exercises.
+- **Insert exercise group** (`StrengthEditor.jsx`, replacing `SessionBlockPicker`): a `Modal` listing saved groups (name, exercise/rep summary, superset badge) plus a Position choice — an index into the session's `data.groups` array (at the start / after each existing group), matching the mockup.
+- **One shared `ConfirmDialog`** (built on `Modal`) for every remaining confirm: naming a saved session template, renaming/deleting plan nodes, deleting library items, the session-type switch warning, and "Reset demo data". States what's lost, with a count where possible (e.g. "Delete Week 3? This removes 4 sessions.").
+- **Not in this slice:** the Add-to-week dialog's day/AM-PM grid and the archive dialog's "Replace with another exercise" — both need the day/slot data model from slice 2.
+
+### Acceptance checks
+- No `window.prompt`/`window.confirm` call remains anywhere in `src/`.
+- Every dialog: Escape closes it, focus returns to the button that opened it, and a screen reader announces it as a dialog.
+- Saving an exercise group with a name that already exists (any case) shows an inline error and does not save.
+- Inserting an exercise group at a chosen position lands it there in the session.
+- `npm run lint` and `npm run build` pass.

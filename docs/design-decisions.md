@@ -83,3 +83,16 @@ Keep the current look (dark header, cool neutrals, teal accent) for now. A warme
 - Conditioning body for the quick-view panel.
 - Linked vs copied exercise groups.
 - Load metric for the season strip.
+
+## Supplement 2026-11-05
+
+Decisions made while fixing slice-1 QA findings, not yet reflected above.
+
+- **Dev row:** `VITE_STATE_ROW_ID` (default `singleton`) isolates local/preview work from the live plan. A "Dev data: `<id>`" banner shows whenever the row isn't `singleton`. "Reset demo data" always confirms first, naming what's lost, and lives in the footer rather than the main toolbar.
+- **Sync never resets local navigation:** `HYDRATE` replaces only the shared slice (exercises, plan, savedSessions, exerciseGroups). It never resets `selectedPath` or `expanded` — those are per-viewer state and are only cleared/merged when the node they reference is actually gone or new.
+- **Sets / reps:** sets is a required integer 1–99 (empty while typing is fine; invalid values show an inline error and are never silently coerced). Reps is free text — `8`, `8-10`, `AMRAP`, `5/3/1` are all valid; it's not validated against a fixed pattern.
+- **Tags:** stored lowercase-hyphenated. Typing a close match to an existing tag shows "Already exists: #tag"; pressing Enter only selects the existing tag on an exact (case-insensitive) match — anything else creates a new, normalized tag rather than silently substituting a near match.
+- **Weeks are numbered by position**, not stored by name. Copying, reordering or deleting a week can never leave a stale or colliding name behind. A custom label still goes in the week's free-text `focus` field. Block names stay free text, coach-maintained; deriving a block's week range automatically was considered and not chosen.
+- **Dialogs:** every dialog is the shared `Modal` component (focus trap, Escape to close, `role="dialog"`, `aria-modal`, focus returned to the trigger on close), plus one shared `ConfirmDialog` variant for yes/no confirmations that states what will be lost, with a count where possible. Native `window.prompt`/`window.confirm` are gone from the app. **V13 (a single dialog system) is un-parked** — this is it. Undo is still parked; a confirm is the only safety net.
+- **Day slots and "Replace with another exercise" remain later slices** — nothing in slice 1b adds them, even where the mockups' dialog board shows them (Add-to-week's day/slot grid, the archive dialog's "Replace with…" option).
+- **Plan overview (season strip, block grid, quick-view panel) is slice 2** — planned before it's built; see `slice-2-plan.md`.

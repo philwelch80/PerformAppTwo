@@ -13,7 +13,7 @@ npm run lint
 npm run build
 ```
 
-Env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and (after slice 1) `VITE_STATE_ROW_ID` (defaults to `singleton`; use a different value for dev/branch deploys so the live row is never touched). This must also be set in Netlify, scoped to the deploy-preview and branch-deploy contexts (not just Production) — otherwise PR/branch previews silently fall back to `singleton` and touch the live row. A banner reading "Dev data: &lt;id&gt;" shows in the app whenever the row isn't `singleton`.
+Env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and (after slice 1) `VITE_STATE_ROW_ID` (defaults to `singleton`; use a different value for dev/branch deploys so the live row is never touched). This must also be set in Netlify, scoped to the deploy-preview and branch-deploy contexts (not just Production) — otherwise PR/branch previews silently fall back to `singleton` and touch the live row. A banner reading "Dev data: &lt;id&gt;" shows in the app whenever the row isn't `singleton`. Local dev and Netlify previews use `VITE_STATE_ROW_ID=dev`.
 
 ## Stack and architecture
 
@@ -63,4 +63,4 @@ A client that loads a row with a **newer** `schemaVersion` than it understands m
 
 ## Visual reference
 
-Screen mockups (Claude Design canvas): https://claude.ai/artifact/WiXuMtGB5zSoo7aHA5rSD8 — Library (exercises, exercise groups, sessions), plan builder (week table and weeks-as-rows grid), session builder, session quick-view panel, dialogs. Take layout, hierarchy and wording from it. Don't copy its markup, and don't treat its sample data as real. Styling is a later pass; until then the existing look is fine.
+Mockup images are in `docs/mockups/`; use those — the canvas link is for humans. Screen mockups (Claude Design canvas): https://claude.ai/artifact/WiXuMtGB5zSoo7aHA5rSD8 — Library (exercises, exercise groups, sessions), plan builder (week table and weeks-as-rows grid), session builder, session quick-view panel, dialogs. Take layout, hierarchy and wording from it. Don't copy its markup, and don't treat its sample data as real. Styling is a later pass; until then the existing look is fine.
