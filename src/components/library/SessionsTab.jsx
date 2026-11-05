@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../../state/StoreContext.jsx'
 import { useToast } from '../../state/ToastContext.jsx'
+import { useConfirm } from '../../state/ConfirmContext.jsx'
 import { SESSION_TYPES, sessionTypeInfo } from '../../lib/taxonomy'
 import SavedSessionModal from './SavedSessionModal.jsx'
 import AddToWeekDialog from './AddToWeekDialog.jsx'
@@ -8,6 +9,7 @@ import AddToWeekDialog from './AddToWeekDialog.jsx'
 export default function SessionsTab() {
   const { state, dispatch } = useStore()
   const toast = useToast()
+  const confirm = useConfirm()
   const [q, setQ] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [editingId, setEditingId] = useState(null)
@@ -65,11 +67,11 @@ export default function SessionsTab() {
                   </button>
                   <button
                     className="btn btn-ghost btn-sm btn-danger-text"
-                    onClick={() => {
-                      if (window.confirm(`Delete "${s.name}"? This cannot be undone.`)) {
-                        dispatch({ type: 'SAVED_SESSION_DELETE', id: s.id })
-                        toast('Saved session deleted')
-                      }
+                    onClick={async () => {
+                      const ok = await confirm({ title: `Delete "${s.name}"?`, description: 'This cannot be undone.' })
+                      if (!ok) return
+                      dispatch({ type: 'SAVED_SESSION_DELETE', id: s.id })
+                      toast('Saved session deleted')
                     }}
                   >
                     Delete

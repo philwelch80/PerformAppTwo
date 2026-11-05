@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useStore, resetSharedData, ROW_ID } from './state/StoreContext.jsx'
+import { useConfirm } from './state/ConfirmContext.jsx'
 import Library from './components/library/Library.jsx'
 import PlanBuilder from './components/plan/PlanBuilder.jsx'
 
@@ -10,6 +11,7 @@ const TABS = [
 
 export default function App() {
   const { ready, syncError, tooNew } = useStore()
+  const confirm = useConfirm()
   const [activeTab, setActiveTab] = useState('library')
   const [resetting, setResetting] = useState(false)
 
@@ -103,10 +105,14 @@ export default function App() {
             className="btn btn-ghost btn-sm"
             disabled={resetting}
             onClick={async () => {
-              if (window.confirm('Reset the shared plan back to the example data? This clears what everyone has edited.')) {
-                setResetting(true)
-                await resetSharedData()
-              }
+              const ok = await confirm({
+                title: 'Reset the shared plan?',
+                description: 'This clears what everyone has edited and restores the example data.',
+                confirmLabel: 'Reset',
+              })
+              if (!ok) return
+              setResetting(true)
+              await resetSharedData()
             }}
           >
             {resetting ? 'Resetting…' : 'Reset demo data'}

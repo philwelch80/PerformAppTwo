@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../../state/StoreContext.jsx'
 import { useToast } from '../../state/ToastContext.jsx'
+import { useConfirm } from '../../state/ConfirmContext.jsx'
 import { MOVEMENT_PATTERNS, EQUIPMENT, BODY_AREAS } from '../../lib/taxonomy'
 import { allTagNames, exerciseUsage } from '../../lib/exercises'
 import TagPicker from './TagPicker.jsx'
@@ -20,6 +21,7 @@ const BLANK = {
 export default function ExerciseModal({ editingId, onClose }) {
   const { state, dispatch } = useStore()
   const toast = useToast()
+  const confirm = useConfirm()
   const isNew = editingId === 'new'
   const existing = isNew ? null : state.exercises.find((e) => e.id === editingId)
 
@@ -54,10 +56,11 @@ export default function ExerciseModal({ editingId, onClose }) {
     onClose()
   }
 
-  function deleteOrArchive() {
+  async function deleteOrArchive() {
     const usage = exerciseUsage(state, editingId)
     if (usage.total === 0) {
-      if (window.confirm(`Delete "${existing.name}"? This cannot be undone.`)) {
+      const ok = await confirm({ title: `Delete "${existing.name}"?`, description: 'This cannot be undone.' })
+      if (ok) {
         dispatch({ type: 'EXERCISE_DELETE', id: editingId })
         toast('Exercise deleted')
         onClose()

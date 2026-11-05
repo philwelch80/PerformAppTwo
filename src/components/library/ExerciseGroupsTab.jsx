@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '../../state/StoreContext.jsx'
 import { useToast } from '../../state/ToastContext.jsx'
+import { useConfirm } from '../../state/ConfirmContext.jsx'
 import { tagCounts, exerciseGroupUsageCount } from '../../lib/exercises'
 import TagFilterPills from './TagFilterPills.jsx'
 import ExerciseGroupModal from './ExerciseGroupModal.jsx'
@@ -20,6 +21,7 @@ function passesFilter(group, filter) {
 export default function ExerciseGroupsTab() {
   const { state, dispatch } = useStore()
   const toast = useToast()
+  const confirm = useConfirm()
   const [filter, setFilter] = useState({ q: '', exerciseId: '', supersetsOnly: false, tag: '' })
   const [editingId, setEditingId] = useState(null)
 
@@ -119,11 +121,15 @@ export default function ExerciseGroupsTab() {
                     </button>
                     <button
                       className="btn btn-ghost btn-sm btn-danger-text"
-                      onClick={() => {
-                        if (window.confirm(`Delete "${g.name}"? This cannot be undone.`)) {
-                          dispatch({ type: 'EXERCISE_GROUP_DELETE', id: g.id })
-                          toast('Exercise group deleted')
-                        }
+                      onClick={async () => {
+                        const description =
+                          usedIn > 0
+                            ? `It's used in ${usedIn} session${usedIn === 1 ? '' : 's'} (those keep their own copy). This cannot be undone.`
+                            : 'This cannot be undone.'
+                        const ok = await confirm({ title: `Delete "${g.name}"?`, description })
+                        if (!ok) return
+                        dispatch({ type: 'EXERCISE_GROUP_DELETE', id: g.id })
+                        toast('Exercise group deleted')
                       }}
                     >
                       Delete

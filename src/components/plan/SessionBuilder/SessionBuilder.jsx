@@ -1,5 +1,7 @@
 import { useStore } from '../../../state/StoreContext.jsx'
 import { useToast } from '../../../state/ToastContext.jsx'
+import { useConfirm } from '../../../state/ConfirmContext.jsx'
+import { usePrompt } from '../../../state/PromptContext.jsx'
 import { SESSION_TYPES } from '../../../lib/taxonomy'
 import StrengthEditor from './StrengthEditor.jsx'
 import ConditioningEditor from './ConditioningEditor.jsx'
@@ -14,19 +16,27 @@ function hasContent(session) {
 export default function SessionBuilder({ path, session, onDelete, hideSaveAsTemplate }) {
   const { dispatch } = useStore()
   const toast = useToast()
+  const confirm = useConfirm()
+  const prompt = usePrompt()
 
-  function setType(nextType) {
+  async function setType(nextType) {
     if (nextType === session.type) return
-    if (hasContent(session) && !window.confirm('Switching session type clears what you’ve entered for the current type. Continue?')) {
-      return
+    if (hasContent(session)) {
+      const ok = await confirm({
+        title: 'Switch session type?',
+        description: 'This clears what you’ve entered for the current type.',
+        confirmLabel: 'Switch',
+        danger: false,
+      })
+      if (!ok) return
     }
     dispatch({ type: 'SESSION_SET_TYPE', path, sessionType: nextType })
   }
 
-  function saveAsTemplate() {
-    const name = window.prompt('Name this saved session template', session.name)
-    if (!name || !name.trim()) return
-    dispatch({ type: 'SESSION_SAVE_AS_TEMPLATE', path, name: name.trim() })
+  async function saveAsTemplate() {
+    const name = await prompt({ title: 'Name this saved session template', label: 'Name', defaultValue: session.name })
+    if (!name) return
+    dispatch({ type: 'SESSION_SAVE_AS_TEMPLATE', path, name })
     toast('Saved as a reusable session template')
   }
 
@@ -51,8 +61,9 @@ export default function SessionBuilder({ path, session, onDelete, hideSaveAsTemp
           )}
           <button
             className="btn btn-danger-text btn-sm"
-            onClick={() => {
-              if (!window.confirm('Delete this session?')) return
+            onClick={async () => {
+              const ok = await confirm({ title: `Delete "${session.name}"?` })
+              if (!ok) return
               if (onDelete) {
                 onDelete()
               } else {
