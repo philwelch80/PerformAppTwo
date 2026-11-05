@@ -1,9 +1,13 @@
+import { normalizeTag } from './exercises'
+
 // v1 (no schemaVersion) -> v2: mobility -> routines, sessionBlocks ->
 // exerciseGroups (+ tags, isSuperset), groups get isSuperset, exercises get
 // archived. See docs/slice-1-plan.md step 1 for the full table.
 // v2 -> v3: reps becomes free text ("8", "8-10", "AMRAP", "5/3/1") instead
 // of a coerced number (V3).
-export const CURRENT_VERSION = 3
+// v3 -> v4: tags are normalized to lowercase-hyphenated, merging duplicates
+// that only differed by case (V14).
+export const CURRENT_VERSION = 4
 
 export function isNewerThanSupported(sharedState) {
   return (sharedState?.schemaVersion || 1) > CURRENT_VERSION
@@ -64,6 +68,22 @@ function v2ToV3(state) {
     if (session.data?.groups) session.data.groups.forEach((group) => stringifyReps(group.items))
   })
 
+  state.schemaVersion = 3
+  return state
+}
+
+function dedupeTags(tags) {
+  return [...new Set(tags.map(normalizeTag))]
+}
+
+function v3ToV4(state) {
+  state.exercises.forEach((exercise) => {
+    exercise.tags = dedupeTags(exercise.tags)
+  })
+  state.exerciseGroups.forEach((group) => {
+    group.tags = dedupeTags(group.tags)
+  })
+
   state.schemaVersion = CURRENT_VERSION
   return state
 }
@@ -78,5 +98,6 @@ export function migrate(sharedState) {
   let state = structuredClone(sharedState)
   if (version < 2) state = v1ToV2(state)
   if (state.schemaVersion < 3) state = v2ToV3(state)
+  if (state.schemaVersion < 4) state = v3ToV4(state)
   return state
 }

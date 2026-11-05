@@ -121,7 +121,7 @@ describe('migrate v1 -> v2', () => {
   it('sets schemaVersion to CURRENT_VERSION', () => {
     const result = migrate(v1Fixture())
     expect(result.schemaVersion).toBe(CURRENT_VERSION)
-    expect(CURRENT_VERSION).toBe(3)
+    expect(CURRENT_VERSION).toBe(4)
   })
 
   it('stringifies reps (v1 -> v3 goes through v2 on the way)', () => {
@@ -144,7 +144,7 @@ describe('migrate v1 -> v2', () => {
   })
 
   it('leaves a newer-than-supported state unchanged and flags it', () => {
-    const fromTheFuture = { schemaVersion: 4, plan: { phases: [] }, exercises: [], savedSessions: [], exerciseGroups: [] }
+    const fromTheFuture = { schemaVersion: 5, plan: { phases: [] }, exercises: [], savedSessions: [], exerciseGroups: [] }
     expect(isNewerThanSupported(fromTheFuture)).toBe(true)
     expect(migrate(fromTheFuture)).toEqual(fromTheFuture)
   })
@@ -207,7 +207,7 @@ describe('migrate v2 -> v3', () => {
     expect(result.plan.phases[0].subphases[0].blocks[0].weeks[0].sessions[0].data.groups[0].items[0].reps).toBe('5')
     expect(result.savedSessions[0].data.groups[0].items[0].reps).toBe('8')
     expect(result.exerciseGroups[0].items[0].reps).toBe('10')
-    expect(result.schemaVersion).toBe(3)
+    expect(result.schemaVersion).toBe(CURRENT_VERSION) // migrate always runs through to the latest version
   })
 
   it('leaves an already-string reps value alone', () => {
@@ -225,6 +225,38 @@ describe('migrate v2 -> v3', () => {
 
   it('does not mutate its input', () => {
     const fixture = v2Fixture()
+    const snapshot = JSON.parse(JSON.stringify(fixture))
+    migrate(fixture)
+    expect(fixture).toEqual(snapshot)
+  })
+})
+
+describe('migrate v3 -> v4', () => {
+  function v3Fixture() {
+    return {
+      schemaVersion: 3,
+      exercises: [{ id: 'ex_1', name: 'Back Squat', tags: ['staple', 'Compound', 'compound'], archived: false }],
+      plan: { name: 'Plan', phases: [] },
+      savedSessions: [],
+      exerciseGroups: [{ id: 'xg_1', name: 'Warm-Up', items: [], tags: ['Warm Up', 'warm-up'], isSuperset: false }],
+    }
+  }
+
+  it('lowercases and hyphenates tags, merging duplicates that only differed by case', () => {
+    const result = migrate(v3Fixture())
+    expect(result.exercises[0].tags).toEqual(['staple', 'compound'])
+    expect(result.exerciseGroups[0].tags).toEqual(['warm-up'])
+    expect(result.schemaVersion).toBe(4)
+  })
+
+  it('is idempotent', () => {
+    const once = migrate(v3Fixture())
+    const twice = migrate(once)
+    expect(twice).toEqual(once)
+  })
+
+  it('does not mutate its input', () => {
+    const fixture = v3Fixture()
     const snapshot = JSON.parse(JSON.stringify(fixture))
     migrate(fixture)
     expect(fixture).toEqual(snapshot)

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { findCloseTag } from '../../lib/exercises'
+import { findCloseTag, normalizeTag } from '../../lib/exercises'
 
 // Toggle pills for an edit form's tags: tap an existing tag to add/remove
 // it, or "+ New tag" to create one — never free text. allTags is the full
@@ -20,8 +20,11 @@ export default function TagPicker({ allTags, selected, onChange }) {
       setDraft('')
       return
     }
-    const close = findCloseTag(allTags, value)
-    const tag = close || value
+    // Enter on an exact (case-insensitive) match selects the existing tag;
+    // anything else creates a new, normalized tag rather than silently
+    // swapping in an unrelated close match.
+    const exact = allTags.find((t) => t.toLowerCase() === value.toLowerCase())
+    const tag = exact || normalizeTag(value)
     if (!selected.includes(tag)) onChange([...selected, tag])
     setDraft('')
     setAdding(false)

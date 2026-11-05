@@ -53,6 +53,12 @@ export function allTagNames(state) {
   return [...set].sort((a, b) => a.localeCompare(b))
 }
 
+// Tags are stored lowercase-hyphenated so "Compound" and "compound" (or
+// "compound" and "compound ") never end up as two different tags.
+export function normalizeTag(raw) {
+  return raw.trim().toLowerCase().replace(/\s+/g, '-')
+}
+
 // For the "+ New tag" input's "Already exists: #upper" suggestion —
 // case-insensitive, preferring a prefix match over a mere substring match.
 export function findCloseTag(existingTags, input) {
