@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useStore, resetSharedData } from './state/StoreContext.jsx'
+import { useStore, resetSharedData, ROW_ID } from './state/StoreContext.jsx'
 import Library from './components/library/Library.jsx'
 import PlanBuilder from './components/plan/PlanBuilder.jsx'
 
@@ -17,6 +17,8 @@ export default function App() {
     library: state.exercises.filter((e) => !e.archived).length,
     plan: null,
   }
+
+  const devBanner = ROW_ID !== 'singleton' && <div className="dev-banner">Dev data: {ROW_ID} — not the live plan</div>
 
   const header = (
     <header className="app-header">
@@ -45,6 +47,7 @@ export default function App() {
     return (
       <>
         {header}
+        {devBanner}
         <div className="shell">
           <div className="detail-empty">Loading the shared plan…</div>
         </div>
@@ -56,6 +59,7 @@ export default function App() {
     return (
       <>
         {header}
+        {devBanner}
         <div className="shell">
           <div className="empty-state" style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}>
             Someone saved a newer version of this plan than this tab understands. Reload to pick it up — this
@@ -72,6 +76,7 @@ export default function App() {
   return (
     <>
       {header}
+      {devBanner}
       <div className="shell">
         <div className="app-subbar">
           <div className="topbar-note">
