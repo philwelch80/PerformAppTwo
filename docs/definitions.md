@@ -23,7 +23,7 @@ For reviewers: terms as the prototype uses them, and the one metric still being 
 | Exercise group | A saved bundle of two or more exercises in the Library. Inserting one adds a copy; editing the copy never changes the saved group |
 | Archived exercise | Hidden from the library and picker, still shown wherever it is already used |
 
-## Training load (proposed, not yet built)
+## Training load (decided, being built in slice 2)
 
 **Session load = session RPE × duration in minutes**, in arbitrary units (AU).
 - *Session RPE:* how hard the whole session is meant to feel, 1–10.
@@ -32,7 +32,7 @@ For reviewers: terms as the prototype uses them, and the one metric still being 
 
 **Week load** = the sum of its sessions' loads. The season strip draws one bar per week, scaled to the heaviest week in the plan.
 
-**What this needs.** Each session needs a planned RPE and a planned duration. Neither exists in the data today, so the bars stay a flat placeholder. Both fields would be optional; a session without them counts as 0 and the week shows a "load incomplete" mark rather than a misleading low bar.
+**What this needs.** Each session has an optional planned RPE and planned duration (added in slice 2). A session missing either counts as 0 and the week shows a "load incomplete" mark rather than a misleading low bar. Weeks where no session has both stay flat.
 
 **Questions for reviewers**
 1. Is session RPE × duration how you think about load? If not, what do you use (total sets, tonnage, volume load, something else)?
