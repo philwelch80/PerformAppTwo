@@ -319,5 +319,6 @@ label { display: block; font-size: 12px; font-weight: 500; color: var(--ink-soft
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
 
 .foot-note { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--steel); font-size: 12px; }
+.foot-note p { margin: 0 0 10px; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

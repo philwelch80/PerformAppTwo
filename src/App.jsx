@@ -83,18 +83,6 @@ export default function App() {
             This tests the <b>data model and interactions</b> for the coach side only — not the final look.
             Click around, break it, then send feedback on what didn&apos;t hang together.
           </div>
-          <button
-            className="btn btn-ghost btn-sm"
-            disabled={resetting}
-            onClick={async () => {
-              if (window.confirm('Reset the shared plan back to the example data? This clears what everyone has edited.')) {
-                setResetting(true)
-                await resetSharedData()
-              }
-            }}
-          >
-            {resetting ? 'Resetting…' : 'Reset demo data'}
-          </button>
         </div>
 
         {syncError && (
@@ -107,8 +95,22 @@ export default function App() {
         {activeTab === 'plan' && <PlanBuilder />}
 
         <div className="foot-note">
-          Coach-side prototype only — no athlete views, no accounts. Anyone with this link sees and can
-          edit the same shared plan (no login) — edits sync to everyone within a few seconds.
+          <p>
+            Coach-side prototype only — no athlete views, no accounts. Anyone with this link sees and can
+            edit the same shared plan (no login) — edits sync to everyone within a few seconds.
+          </p>
+          <button
+            className="btn btn-ghost btn-sm"
+            disabled={resetting}
+            onClick={async () => {
+              if (window.confirm('Reset the shared plan back to the example data? This clears what everyone has edited.')) {
+                setResetting(true)
+                await resetSharedData()
+              }
+            }}
+          >
+            {resetting ? 'Resetting…' : 'Reset demo data'}
+          </button>
         </div>
       </div>
     </>
