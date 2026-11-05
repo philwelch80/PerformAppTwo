@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useStore } from '../../../state/StoreContext.jsx'
 import { useToast } from '../../../state/ToastContext.jsx'
 import ExercisePicker from './ExercisePicker.jsx'
-import SessionBlockPicker from './SessionBlockPicker.jsx'
+import SaveGroupDialog from './SaveGroupDialog.jsx'
+import InsertGroupDialog from './InsertGroupDialog.jsx'
 import SetsInput from '../../common/SetsInput.jsx'
 
 function findExercise(exercises, id) {
@@ -13,15 +14,10 @@ export default function StrengthEditor({ path, session }) {
   const { state, dispatch } = useStore()
   const toast = useToast()
   const [pickerForGroup, setPickerForGroup] = useState(null)
-  const [blockPickerOpen, setBlockPickerOpen] = useState(false)
+  const [savingGroupId, setSavingGroupId] = useState(null)
+  const [insertGroupOpen, setInsertGroupOpen] = useState(false)
   const groups = session.data.groups
-
-  function saveGroupAsGroup(groupId, currentLabel) {
-    const name = window.prompt('Name this exercise group', currentLabel || 'Warm-Up')
-    if (!name || !name.trim()) return
-    dispatch({ type: 'GROUP_SAVE_AS_GROUP', path, groupId, name: name.trim() })
-    toast('Saved as an exercise group')
-  }
+  const savingGroup = groups.find((g) => g.id === savingGroupId)
 
   return (
     <div>
@@ -37,7 +33,7 @@ export default function StrengthEditor({ path, session }) {
               onChange={(e) => dispatch({ type: 'GROUP_RENAME', path, groupId: group.id, label: e.target.value })}
             />
             <div style={{ display: 'flex', gap: 4 }}>
-              <button className="btn btn-ghost btn-sm" onClick={() => saveGroupAsGroup(group.id, group.label)} disabled={group.items.length < 2}>
+              <button className="btn btn-ghost btn-sm" onClick={() => setSavingGroupId(group.id)} disabled={group.items.length < 2}>
                 Save as exercise group
               </button>
               <button className="btn btn-ghost btn-sm btn-danger-text" onClick={() => dispatch({ type: 'GROUP_DELETE', path, groupId: group.id })}>
@@ -116,21 +112,35 @@ export default function StrengthEditor({ path, session }) {
         <button className="btn btn-sm" onClick={() => dispatch({ type: 'GROUP_ADD', path })}>
           + Add group
         </button>
-        <div style={{ position: 'relative' }}>
-          <button className="btn btn-sm" onClick={() => setBlockPickerOpen((v) => !v)}>
-            Insert exercise group
-          </button>
-          {blockPickerOpen && (
-            <SessionBlockPicker
-              onSelect={(exerciseGroupId) => {
-                dispatch({ type: 'EXERCISE_GROUP_INSERT', path, exerciseGroupId })
-                toast('Exercise group inserted')
-              }}
-              onClose={() => setBlockPickerOpen(false)}
-            />
-          )}
-        </div>
+        <button className="btn btn-sm" onClick={() => setInsertGroupOpen(true)}>
+          Insert exercise group
+        </button>
       </div>
+
+      {savingGroup && (
+        <SaveGroupDialog
+          group={savingGroup}
+          defaultName={savingGroup.label}
+          onClose={() => setSavingGroupId(null)}
+          onSave={(name, includeWeights) => {
+            dispatch({ type: 'GROUP_SAVE_AS_GROUP', path, groupId: savingGroupId, name, includeWeights })
+            toast('Saved as an exercise group')
+            setSavingGroupId(null)
+          }}
+        />
+      )}
+
+      {insertGroupOpen && (
+        <InsertGroupDialog
+          session={session}
+          onClose={() => setInsertGroupOpen(false)}
+          onInsert={(exerciseGroupId, position) => {
+            dispatch({ type: 'EXERCISE_GROUP_INSERT', path, exerciseGroupId, position })
+            toast('Exercise group inserted')
+            setInsertGroupOpen(false)
+          }}
+        />
+      )}
     </div>
   )
 }

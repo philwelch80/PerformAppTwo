@@ -252,12 +252,14 @@ export function reducer(state, action) {
         const session = sessionAt(draft, action.path)
         const group = session.data.groups.find((g) => g.id === action.groupId)
         if (!group || group.items.length < 2) break
+        const items = JSON.parse(JSON.stringify(group.items))
+        if (!action.includeWeights) items.forEach((item) => { item.startingWeight = '' })
         draft.exerciseGroups.push({
           id: uid('xg'),
           name: action.name,
-          items: JSON.parse(JSON.stringify(group.items)),
+          items,
           tags: [],
-          isSuperset: true,
+          isSuperset: group.isSuperset,
         })
         break
       }
@@ -265,12 +267,14 @@ export function reducer(state, action) {
         const session = sessionAt(draft, action.path)
         const exerciseGroup = draft.exerciseGroups.find((g) => g.id === action.exerciseGroupId)
         if (!exerciseGroup) break
-        session.data.groups.push({
+        const newGroup = {
           id: uid('grp'),
           label: exerciseGroup.name,
           items: JSON.parse(JSON.stringify(exerciseGroup.items)),
           isSuperset: exerciseGroup.isSuperset,
-        })
+        }
+        const index = action.position ?? session.data.groups.length
+        session.data.groups.splice(index, 0, newGroup)
         break
       }
       case 'EXERCISE_GROUP_DELETE': {

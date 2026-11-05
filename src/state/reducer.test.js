@@ -77,7 +77,7 @@ describe('GROUP_SAVE_AS_GROUP', () => {
     expect(next.exerciseGroups.length).toBe(countBefore)
   })
 
-  it('saves a group with two or more items as a superset exercise group', () => {
+  it('saves a group with two or more items, keeping its own isSuperset value', () => {
     const state = initialState()
     const path = pathToSession(state, 'Lower A')
     const session = sessionByName(state, 'Lower A')
@@ -85,13 +85,23 @@ describe('GROUP_SAVE_AS_GROUP', () => {
     const next = reducer(state, { type: 'GROUP_SAVE_AS_GROUP', path, groupId: multiItemGroup.id, name: 'New Group' })
     const saved = next.exerciseGroups.find((g) => g.name === 'New Group')
     expect(saved).toBeDefined()
-    expect(saved.isSuperset).toBe(true)
+    expect(saved.isSuperset).toBe(multiItemGroup.isSuperset)
     expect(saved.items.length).toBe(multiItemGroup.items.length)
+  })
+
+  it('strips starting weight from the copy when includeWeights is false', () => {
+    const state = initialState()
+    const path = pathToSession(state, 'Lower A')
+    const session = sessionByName(state, 'Lower A')
+    const multiItemGroup = session.data.groups.find((g) => g.items.length >= 2)
+    const next = reducer(state, { type: 'GROUP_SAVE_AS_GROUP', path, groupId: multiItemGroup.id, name: 'No Weights', includeWeights: false })
+    const saved = next.exerciseGroups.find((g) => g.name === 'No Weights')
+    expect(saved.items.every((item) => item.startingWeight === '')).toBe(true)
   })
 })
 
 describe('EXERCISE_GROUP_INSERT / EXERCISE_GROUP_DELETE', () => {
-  it('inserts a saved exercise group into a session as a new group', () => {
+  it('inserts a saved exercise group into a session as a new group, at the end by default', () => {
     const state = initialState()
     const path = pathToSession(state, 'Lower A')
     const exerciseGroup = state.exerciseGroups[0]
@@ -100,6 +110,15 @@ describe('EXERCISE_GROUP_INSERT / EXERCISE_GROUP_DELETE', () => {
     const groups = sessionByName(next, 'Lower A').data.groups
     expect(groups.length).toBe(countBefore + 1)
     expect(groups[groups.length - 1].label).toBe(exerciseGroup.name)
+  })
+
+  it('inserts a saved exercise group at a chosen position', () => {
+    const state = initialState()
+    const path = pathToSession(state, 'Lower A')
+    const exerciseGroup = state.exerciseGroups[0]
+    const next = reducer(state, { type: 'EXERCISE_GROUP_INSERT', path, exerciseGroupId: exerciseGroup.id, position: 0 })
+    const groups = sessionByName(next, 'Lower A').data.groups
+    expect(groups[0].label).toBe(exerciseGroup.name)
   })
 
   it('removes a saved exercise group', () => {
