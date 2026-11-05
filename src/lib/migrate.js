@@ -7,7 +7,9 @@ import { normalizeTag } from './exercises'
 // of a coerced number (V3).
 // v3 -> v4: tags are normalized to lowercase-hyphenated, merging duplicates
 // that only differed by case (V14).
-export const CURRENT_VERSION = 4
+// v4 -> v5: a week's stored `name` is dropped — its display name is always
+// derived from position ("Week N"); a custom label goes in `focus` (V8).
+export const CURRENT_VERSION = 5
 
 export function isNewerThanSupported(sharedState) {
   return (sharedState?.schemaVersion || 1) > CURRENT_VERSION
@@ -84,6 +86,17 @@ function v3ToV4(state) {
     group.tags = dedupeTags(group.tags)
   })
 
+  state.schemaVersion = 4
+  return state
+}
+
+function v4ToV5(state) {
+  state.plan.phases.forEach((phase) =>
+    phase.subphases.forEach((sub) =>
+      sub.blocks.forEach((block) => block.weeks.forEach((week) => delete week.name)),
+    ),
+  )
+
   state.schemaVersion = CURRENT_VERSION
   return state
 }
@@ -99,5 +112,6 @@ export function migrate(sharedState) {
   if (version < 2) state = v1ToV2(state)
   if (state.schemaVersion < 3) state = v2ToV3(state)
   if (state.schemaVersion < 4) state = v3ToV4(state)
+  if (state.schemaVersion < 5) state = v4ToV5(state)
   return state
 }

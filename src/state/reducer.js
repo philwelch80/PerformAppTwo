@@ -129,7 +129,7 @@ export function reducer(state, action) {
       }
       case 'WEEK_ADD': {
         const block = getBlock(getSub(getPhase(draft.plan, action.phaseId), action.subId), action.blockId)
-        const week = { id: uid('week'), name: `Week ${block.weeks.length + 1}`, focus: '', sessions: [] }
+        const week = { id: uid('week'), focus: '', sessions: [] }
         block.weeks.push(week)
         draft.expanded[week.id] = true
         draft.selectedPath = { phaseId: action.phaseId, subId: action.subId, blockId: action.blockId, weekId: week.id }
@@ -139,7 +139,6 @@ export function reducer(state, action) {
         const block = getBlock(getSub(getPhase(draft.plan, action.phaseId), action.subId), action.blockId)
         const week = getWeek(block, action.weekId)
         const copy = cloneWeekWithFreshIds(week)
-        copy.name = `${week.name} copy`
         const idx = block.weeks.findIndex((w) => w.id === week.id)
         block.weeks.splice(idx + 1, 0, copy)
         draft.expanded[copy.id] = true

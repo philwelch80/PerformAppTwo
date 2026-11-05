@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { useStore } from '../../state/StoreContext.jsx'
 import { useToast } from '../../state/ToastContext.jsx'
 import { sessionTypeInfo } from '../../lib/taxonomy'
+import { weekName } from '../../lib/planTree'
 
-export default function WeekDetail({ path, week }) {
+export default function WeekDetail({ path, block, week }) {
   const { state, dispatch } = useStore()
   const toast = useToast()
   const [templateId, setTemplateId] = useState('')
@@ -13,15 +14,9 @@ export default function WeekDetail({ path, week }) {
       <div className="detail-head">
         <div style={{ flex: 1 }}>
           <div className="subtle-label">Week</div>
-          <input
-            type="text"
-            className="plan-title-input"
-            style={{ padding: '4px 0' }}
-            value={week.name}
-            onChange={(e) =>
-              dispatch({ type: 'NODE_RENAME', kind: 'week', parts: [path.phaseId, path.subId, path.blockId, week.id], name: e.target.value })
-            }
-          />
+          <div className="plan-title-input" style={{ padding: '4px 0', border: '1px solid transparent' }}>
+            {weekName(block, week)}
+          </div>
         </div>
         <button
           className="btn btn-danger-text btn-sm"

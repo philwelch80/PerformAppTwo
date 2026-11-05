@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { reducer } from './reducer'
 import { migrate } from '../lib/migrate'
 import { freshState } from '../lib/seed'
+import { weekName } from '../lib/planTree'
 
 function initialState() {
   return migrate(freshState())
@@ -161,6 +162,35 @@ describe('EXERCISE_GROUP_UPDATE / DUPLICATE / ITEM_*', () => {
 
     const deleted = reducer(updated, { type: 'EXERCISE_GROUP_ITEM_DELETE', id: group.id, itemIndex: 0 })
     expect(deleted.exerciseGroups.find((g) => g.id === group.id).items.length).toBe(afterAdd.items.length - 1)
+  })
+})
+
+describe('WEEK_ADD / WEEK_COPY', () => {
+  it('adds a week with no stored name — its display name comes from position', () => {
+    const state = initialState()
+    const phaseId = state.plan.phases[0].id
+    const subId = state.plan.phases[0].subphases[0].id
+    const blockId = state.plan.phases[0].subphases[0].blocks[0].id
+    const next = reducer(state, { type: 'WEEK_ADD', phaseId, subId, blockId })
+    const weeks = next.plan.phases[0].subphases[0].blocks[0].weeks
+    expect(weeks.at(-1).name).toBeUndefined()
+    expect(weekName({ weeks }, weeks.at(-1))).toBe(`Week ${weeks.length}`)
+  })
+
+  it('copies a week into the next slot without a stale "copy" name, and later weeks renumber', () => {
+    const state = initialState()
+    const phaseId = state.plan.phases[0].id
+    const subId = state.plan.phases[0].subphases[0].id
+    const blockId = state.plan.phases[0].subphases[0].blocks[0].id
+    const block = state.plan.phases[0].subphases[0].blocks[0]
+    const week1Id = block.weeks[0].id
+    const next = reducer(state, { type: 'WEEK_COPY', phaseId, subId, blockId, weekId: week1Id })
+    const nextBlock = next.plan.phases[0].subphases[0].blocks[0]
+    expect(nextBlock.weeks.length).toBe(block.weeks.length + 1)
+    expect(nextBlock.weeks[1].name).toBeUndefined()
+    expect(weekName(nextBlock, nextBlock.weeks[1])).toBe('Week 2')
+    // the original week 2 is now pushed to week 3
+    expect(weekName(nextBlock, nextBlock.weeks[2])).toBe('Week 3')
   })
 })
 

@@ -12,6 +12,13 @@ export function getBlock(sub, id) {
 export function getWeek(block, id) {
   return block.weeks.find((w) => w.id === id)
 }
+
+// Weeks have no stored name — their display name is always derived from
+// position within the block, so copying or reordering weeks never leaves a
+// stale or colliding name behind (a custom label goes in week.focus).
+export function weekName(block, week) {
+  return `Week ${block.weeks.findIndex((w) => w.id === week.id) + 1}`
+}
 export function getSession(week, id) {
   return week.sessions.find((s) => s.id === id)
 }
@@ -86,7 +93,7 @@ export function allWeeksWithPath(plan) {
         block.weeks.forEach((week) => {
           rows.push({
             path: { phaseId: phase.id, subId: sub.id, blockId: block.id, weekId: week.id },
-            label: `${phase.name} › ${sub.name} › ${block.name} › ${week.name}`,
+            label: `${phase.name} › ${sub.name} › ${block.name} › ${weekName(block, week)}`,
           })
         }),
       ),

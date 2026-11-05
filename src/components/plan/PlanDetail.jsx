@@ -15,7 +15,7 @@ export default function PlanDetail() {
       {session ? (
         <SessionBuilder path={state.selectedPath} session={session} />
       ) : week ? (
-        <WeekDetail path={state.selectedPath} week={week} />
+        <WeekDetail path={state.selectedPath} block={block} week={week} />
       ) : block ? (
         <BlockDetail path={state.selectedPath} block={block} />
       ) : sub ? (

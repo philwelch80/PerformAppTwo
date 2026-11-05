@@ -1,5 +1,6 @@
 import { useStore } from '../../state/StoreContext.jsx'
 import { useToast } from '../../state/ToastContext.jsx'
+import { weekName } from '../../lib/planTree'
 
 export default function BlockDetail({ path, block }) {
   const { dispatch } = useStore()
@@ -46,7 +47,7 @@ export default function BlockDetail({ path, block }) {
                   onClick={() => dispatch({ type: 'SELECT', path: { ...path, weekId: week.id } })}
                 >
                   <span className="tree-label">
-                    {week.name}
+                    {weekName(block, week)}
                     <span className="tree-sub">{week.focus || `${week.sessions.length} session${week.sessions.length === 1 ? '' : 's'}`}</span>
                   </span>
                 </div>

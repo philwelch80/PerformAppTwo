@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../../state/StoreContext.jsx'
 import { useToast } from '../../state/ToastContext.jsx'
 import { sessionTypeInfo } from '../../lib/taxonomy'
+import { weekName } from '../../lib/planTree'
 
 const KIND_LABEL = { phase: 'Phase', sub: 'Subphase', block: 'Block', week: 'Week', session: 'Session' }
 const HAS_CHILDREN = { phase: true, sub: true, block: true, week: true, session: false }
@@ -216,6 +217,7 @@ export default function PlanTree() {
                                       {block.weeks.map((week) => {
                                         const wExpanded = !!expanded[week.id]
                                         const ids = { phaseId: phase.id, subId: sub.id, blockId: block.id }
+                                        const label = weekName(block, week)
                                         return (
                                           <div
                                             className="tree-node"
@@ -229,7 +231,7 @@ export default function PlanTree() {
                                               <span className="drag-handle" title="Drag to reorder within this block">⋮⋮</span>
                                               <button
                                                 className="disclosure"
-                                                aria-label={`${wExpanded ? 'Collapse' : 'Expand'} ${week.name}`}
+                                                aria-label={`${wExpanded ? 'Collapse' : 'Expand'} ${label}`}
                                                 aria-expanded={wExpanded}
                                                 onClick={(e) => { e.stopPropagation(); toggle(week.id) }}
                                               >
@@ -242,7 +244,7 @@ export default function PlanTree() {
                                                 title={week.focus || undefined}
                                               >
                                                 <span className="tree-label">
-                                                  {week.name}
+                                                  {label}
                                                   <span className="tree-sub">{week.focus || ''}</span>
                                                 </span>
                                               </button>
@@ -253,7 +255,7 @@ export default function PlanTree() {
                                               >
                                                 <button
                                                   className="btn btn-ghost btn-sm kebab-btn"
-                                                  aria-label={`${week.name} actions`}
+                                                  aria-label={`${label} actions`}
                                                   aria-haspopup="true"
                                                   aria-expanded={openWeekMenu === week.id}
                                                   onClick={(e) => { e.stopPropagation(); setOpenWeekMenu(openWeekMenu === week.id ? null : week.id) }}
@@ -273,17 +275,6 @@ export default function PlanTree() {
                                                       }}
                                                     >
                                                       Copy
-                                                    </button>
-                                                    <button
-                                                      role="menuitem"
-                                                      className="row-menu-item"
-                                                      onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        setOpenWeekMenu(null)
-                                                        rename('week', [phase.id, sub.id, block.id, week.id], week.name)
-                                                      }}
-                                                    >
-                                                      Rename
                                                     </button>
                                                     <button
                                                       role="menuitem"

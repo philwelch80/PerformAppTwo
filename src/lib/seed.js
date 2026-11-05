@@ -20,7 +20,6 @@ export function seedPlan(exercises) {
 
   const week1 = {
     id: uid('week'),
-    name: 'Week 1',
     focus: 'Establish baseline loads',
     sessions: [
       {
@@ -65,7 +64,6 @@ export function seedPlan(exercises) {
 
   const week2 = {
     id: uid('week'),
-    name: 'Week 2',
     focus: 'Add volume, same intensity',
     sessions: [
       {

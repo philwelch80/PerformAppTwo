@@ -121,13 +121,18 @@ describe('migrate v1 -> v2', () => {
   it('sets schemaVersion to CURRENT_VERSION', () => {
     const result = migrate(v1Fixture())
     expect(result.schemaVersion).toBe(CURRENT_VERSION)
-    expect(CURRENT_VERSION).toBe(4)
+    expect(CURRENT_VERSION).toBe(5)
   })
 
   it('stringifies reps (v1 -> v3 goes through v2 on the way)', () => {
     const result = migrate(v1Fixture())
     const [strengthSession] = result.plan.phases[0].subphases[0].blocks[0].weeks[0].sessions
     strengthSession.data.groups.forEach((g) => g.items.forEach((item) => expect(typeof item.reps).toBe('string')))
+  })
+
+  it('drops the stored week name (v1 -> v5 goes all the way through)', () => {
+    const result = migrate(v1Fixture())
+    expect(result.plan.phases[0].subphases[0].blocks[0].weeks[0].name).toBeUndefined()
   })
 
   it('does not mutate its input', () => {
@@ -144,7 +149,7 @@ describe('migrate v1 -> v2', () => {
   })
 
   it('leaves a newer-than-supported state unchanged and flags it', () => {
-    const fromTheFuture = { schemaVersion: 5, plan: { phases: [] }, exercises: [], savedSessions: [], exerciseGroups: [] }
+    const fromTheFuture = { schemaVersion: 6, plan: { phases: [] }, exercises: [], savedSessions: [], exerciseGroups: [] }
     expect(isNewerThanSupported(fromTheFuture)).toBe(true)
     expect(migrate(fromTheFuture)).toEqual(fromTheFuture)
   })
@@ -246,7 +251,7 @@ describe('migrate v3 -> v4', () => {
     const result = migrate(v3Fixture())
     expect(result.exercises[0].tags).toEqual(['staple', 'compound'])
     expect(result.exerciseGroups[0].tags).toEqual(['warm-up'])
-    expect(result.schemaVersion).toBe(4)
+    expect(result.schemaVersion).toBe(CURRENT_VERSION) // migrate always runs through to the latest version
   })
 
   it('is idempotent', () => {
@@ -257,6 +262,61 @@ describe('migrate v3 -> v4', () => {
 
   it('does not mutate its input', () => {
     const fixture = v3Fixture()
+    const snapshot = JSON.parse(JSON.stringify(fixture))
+    migrate(fixture)
+    expect(fixture).toEqual(snapshot)
+  })
+})
+
+describe('migrate v4 -> v5', () => {
+  function v4Fixture() {
+    return {
+      schemaVersion: 4,
+      exercises: [],
+      savedSessions: [],
+      exerciseGroups: [],
+      plan: {
+        name: 'Plan',
+        phases: [
+          {
+            id: 'phase_1',
+            name: 'Off-Season',
+            subphases: [
+              {
+                id: 'sub_1',
+                name: 'General Prep',
+                blocks: [
+                  {
+                    id: 'block_1',
+                    name: 'Block 1',
+                    weeks: [
+                      { id: 'week_1', name: 'Week 1', focus: '', sessions: [] },
+                      { id: 'week_2', name: 'Week 1 copy', focus: '', sessions: [] },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    }
+  }
+
+  it('drops the stored week name', () => {
+    const result = migrate(v4Fixture())
+    result.plan.phases[0].subphases[0].blocks[0].weeks.forEach((week) => expect(week.name).toBeUndefined())
+    expect(result.schemaVersion).toBe(5)
+  })
+
+  it('is idempotent', () => {
+    const once = migrate(v4Fixture())
+    const twice = migrate(once)
+    expect(twice).toEqual(once)
+  })
+
+  it('does not mutate its input', () => {
+    const fixture = v4Fixture()
     const snapshot = JSON.parse(JSON.stringify(fixture))
     migrate(fixture)
     expect(fixture).toEqual(snapshot)
